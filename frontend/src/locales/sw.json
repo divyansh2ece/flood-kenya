@@ -1,0 +1,119 @@
+{
+  "appName":        "FloodWatch Kenya",
+  "tagline":        "Taarifa za mafuriko kwa wakati halisi",
+  "liveIndicator":  "MOJA KWA MOJA",
+  "switchLang":     "English",
+
+  "stats": {
+    "reports24h":   "Ripoti (Masaa 24)",
+    "rescueNeeded": "Wanahitaji Msaada",
+    "critical":     "Hatari Sana",
+    "resolved":     "Imesuluhiwa"
+  },
+
+  "feed": {
+    "title":        "Ripoti za Hivi Karibuni",
+    "empty":        "Hakuna ripoti katika kipindi hiki.",
+    "filters": {
+      "all":        "Zote",
+      "rescue":     "Msaada",
+      "critical":   "Hatari"
+    },
+    "time": {
+      "1h": "Saa 1", "6h": "Saa 6", "24h": "Masaa 24"
+    },
+    "source": {
+      "telegram": "Telegram",
+      "web":      "Tovuti",
+      "admin":    "Msimamizi"
+    },
+    "markResolved": "Imekamilika",
+    "rescue":       "MSAADA",
+    "verified":     "Imethibitishwa"
+  },
+
+  "severity": {
+    "1": "Usalama",
+    "2": "Onyo",
+    "3": "Kali",
+    "4": "Hatari Sana",
+    "5": "Dharura"
+  },
+
+  "weather": {
+    "title":        "Hali ya Hewa",
+    "rainfall":     "Mvua sasa",
+    "risk":         "Hatari ya mafuriko",
+    "forecast":     "Masaa 6 yajayo",
+    "riskLevels": {
+      "low":      "Chini",
+      "moderate": "Wastani",
+      "high":     "Juu",
+      "unknown":  "Haijulikani"
+    },
+    "selectCounty": "Chagua kaunti..."
+  },
+
+  "shelters": {
+    "title":     "Makazi ya Karibu",
+    "km":        "km",
+    "call":      "Piga simu",
+    "capacity":  "uwezo",
+    "clickMap":  "Bonyeza sehemu yoyote kwenye ramani kupata makazi ya karibu."
+  },
+
+  "report": {
+    "button":       "Toa Taarifa",
+    "title":        "Tuma Ripoti ya Mafuriko",
+    "location":     "Mahali / Eneo",
+    "county":       "Kaunti",
+    "severity":     "Kiwango cha Hatari",
+    "waterLevel":   "Kiwango cha Maji",
+    "waterLevels": {
+      "":         "Chagua kiwango...",
+      "ankle":    "Kifundo cha mguu",
+      "knee":     "Magoti",
+      "waist":    "Kiuno",
+      "shoulder": "Bega",
+      "head":     "Kichwa — hatari sana"
+    },
+    "needsRescue":  "Watu wanahitaji uokoaji",
+    "description":  "Maelezo",
+    "descPlaceholder": "Elezea hali... (Kiswahili au Kiingereza)",
+    "contact":      "Nambari yako (hiari)",
+    "submit":       "Tuma Ripoti",
+    "submitting":   "Inatuma...",
+    "success":      "Ripoti imetumwa. Kaa salama!",
+    "error":        "Imeshindwa kutuma. Jaribu tena.",
+    "cancel":       "Ghairi",
+    "selectCounty": "Chagua kaunti...",
+    "severityLabels": {
+      "1": "1 - Usalama",
+      "2": "2 - Onyo",
+      "3": "3 - Kali",
+      "4": "4 - Hatari Sana",
+      "5": "5 - Dharura"
+    }
+  },
+
+  "map": {
+    "popupSeverity":  "Kiwango",
+    "popupTime":      "Imetolewa",
+    "popupRescue":    "Msaada unahitajika",
+    "popupSource":    "Chanzo",
+    "popupWater":     "Kiwango cha maji"
+  },
+
+  "emergency": {
+    "title":    "Namba za Dharura",
+    "redcross": "Kenya Red Cross",
+    "police":   "Polisi Kenya",
+    "medical":  "Dharura ya Hospitali",
+    "toll":     "Bure"
+  },
+
+  "telegram": {
+    "cta":    "Toa Ripoti kupitia Telegram",
+    "handle": "@flood_kenya_bot"
+  }
+}

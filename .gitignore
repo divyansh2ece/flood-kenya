@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# IDE
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Secrets — never commit these
+backend/.env
+frontend/.env

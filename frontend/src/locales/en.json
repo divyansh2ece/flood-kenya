@@ -1,0 +1,119 @@
+{
+  "appName":        "FloodWatch Kenya",
+  "tagline":        "Real-time flood intelligence",
+  "liveIndicator":  "LIVE",
+  "switchLang":     "Kiswahili",
+
+  "stats": {
+    "reports24h":   "Reports (24h)",
+    "rescueNeeded": "Rescue Needed",
+    "critical":     "Critical",
+    "resolved":     "Resolved"
+  },
+
+  "feed": {
+    "title":        "Incident Feed",
+    "empty":        "No reports in this period.",
+    "filters": {
+      "all":        "All",
+      "rescue":     "Rescue",
+      "critical":   "Critical"
+    },
+    "time": {
+      "1h": "1h", "6h": "6h", "24h": "24h"
+    },
+    "source": {
+      "telegram": "Telegram",
+      "web":      "Web",
+      "admin":    "Admin"
+    },
+    "markResolved": "Resolve",
+    "rescue":       "RESCUE",
+    "verified":     "Verified"
+  },
+
+  "severity": {
+    "1": "Watch",
+    "2": "Moderate",
+    "3": "Severe",
+    "4": "Critical",
+    "5": "Emergency"
+  },
+
+  "weather": {
+    "title":        "Weather",
+    "rainfall":     "Rainfall now",
+    "risk":         "Flood risk",
+    "forecast":     "Next 6 hours",
+    "riskLevels": {
+      "low":      "Low",
+      "moderate": "Moderate",
+      "high":     "High",
+      "unknown":  "Unknown"
+    },
+    "selectCounty": "Select a county..."
+  },
+
+  "shelters": {
+    "title":     "Nearest Shelters",
+    "km":        "km",
+    "call":      "Call",
+    "capacity":  "capacity",
+    "clickMap":  "Click anywhere on the map to find nearby shelters."
+  },
+
+  "report": {
+    "button":       "Report Flood",
+    "title":        "Submit Flood Report",
+    "location":     "Location / Area",
+    "county":       "County",
+    "severity":     "Severity",
+    "waterLevel":   "Water Level",
+    "waterLevels": {
+      "":         "Select level...",
+      "ankle":    "Ankle",
+      "knee":     "Knee",
+      "waist":    "Waist",
+      "shoulder": "Shoulder",
+      "head":     "Head level — critical"
+    },
+    "needsRescue":  "People need rescue",
+    "description":  "Description",
+    "descPlaceholder": "Describe the situation... (English or Kiswahili)",
+    "contact":      "Your phone (optional)",
+    "submit":       "Submit Report",
+    "submitting":   "Submitting...",
+    "success":      "Report submitted. Stay safe!",
+    "error":        "Failed to submit. Please try again.",
+    "cancel":       "Cancel",
+    "selectCounty": "Select county...",
+    "severityLabels": {
+      "1": "1 - Watch",
+      "2": "2 - Moderate",
+      "3": "3 - Severe",
+      "4": "4 - Critical",
+      "5": "5 - Emergency"
+    }
+  },
+
+  "map": {
+    "popupSeverity":  "Severity",
+    "popupTime":      "Reported",
+    "popupRescue":    "Rescue needed",
+    "popupSource":    "Source",
+    "popupWater":     "Water level"
+  },
+
+  "emergency": {
+    "title":    "Emergency Contacts",
+    "redcross": "Kenya Red Cross",
+    "police":   "Kenya Police",
+    "medical":  "Medical Emergency",
+    "toll":     "Toll-free"
+  },
+
+  "telegram": {
+    "cta":    "Report via Telegram Bot",
+    "handle": "@flood_kenya_bot"
+  }
+}

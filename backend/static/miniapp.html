@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <title>FloodWatch Kenya</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg:      #ffffff;
+      --surface: #f3f4f6;
+      --border:  #e5e7eb;
+      --text:    #111827;
+      --muted:   #6b7280;
+      --blue:    #2563eb;
+      --red:     #dc2626;
+      --green:   #16a34a;
+      --orange:  #ea580c;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    /* Dark mode via Telegram theme */
+    body.dark {
+      --bg:      #0f172a;
+      --surface: #1e293b;
+      --border:  #334155;
+      --text:    #f1f5f9;
+      --muted:   #94a3b8;
+    }
+
+    .header {
+      background: var(--blue);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header h1 { font-size: 16px; font-weight: 700; }
+    .header .live {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 48px;
+      z-index: 9;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s;
+    }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    .content { padding: 12px 14px; }
+    .hidden { display: none !important; }
+
+    /* ── Report Form ─────────────────────────── */
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+    textarea { resize: none; }
+
+    .sev-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+    .sev-btn {
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .sev-btn.active { color: white; border-color: transparent; }
+    .sev-btn[data-n="1"].active { background: #16a34a; }
+    .sev-btn[data-n="2"].active { background: #ca8a04; }
+    .sev-btn[data-n="3"].active { background: #ea580c; }
+    .sev-btn[data-n="4"].active { background: #dc2626; }
+    .sev-btn[data-n="5"].active { background: #7f1d1d; }
+
+    .rescue-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    body.dark .rescue-toggle { background: #450a0a; border-color: #7f1d1d; }
+    .rescue-toggle input { width: auto; }
+    .rescue-toggle span { font-size: 13px; color: var(--text); }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-green   { background: var(--green); color: white; }
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .success-box {
+      text-align: center;
+      padding: 30px 20px;
+      display: none;
+    }
+    .success-box .icon { font-size: 52px; margin-bottom: 12px; }
+    .success-box h2 { color: var(--green); font-size: 18px; margin-bottom: 6px; }
+    .success-box p  { color: var(--muted); font-size: 13px; }
+
+    /* ── Alerts ──────────────────────────────── */
+    .alert-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .alert-card.rescue { border-color: #fca5a5; background: #fef2f2; }
+    body.dark .alert-card.rescue { border-color: #7f1d1d; background: #450a0a; }
+    .alert-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .sev-badge {
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+    }
+    .sev-1 { background: #16a34a; }
+    .sev-2 { background: #ca8a04; }
+    .sev-3 { background: #ea580c; }
+    .sev-4 { background: #dc2626; }
+    .sev-5 { background: #7f1d1d; }
+    .rescue-badge {
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #dc2626;
+      color: white;
+      animation: pulse 1s infinite;
+    }
+    .alert-loc { font-size: 14px; font-weight: 600; color: var(--text); }
+    .alert-msg { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 2px; }
+    .alert-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Shelters ─────────────────────────────── */
+    .shelter-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .shelter-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .shelter-info { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .shelter-dist { font-size: 14px; font-weight: 700; color: var(--blue); white-space: nowrap; margin-left: 10px; }
+    .shelter-phone {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    /* ── Emergency ────────────────────────────── */
+    .emergency-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .emergency-card .name { font-size: 13px; color: var(--muted); }
+    .emergency-card .num  { font-size: 16px; font-weight: 700; color: var(--red); text-decoration: none; }
+
+    .loc-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1.5px solid var(--blue);
+      background: transparent;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .empty { text-align: center; color: var(--muted); padding: 30px 0; font-size: 13px; }
+    .loader {
+      display: flex; justify-content: center; padding: 30px;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span>🌊</span>
+    <h1>FloodWatch Kenya</h1>
+    <div class="live"><div class="dot"></div> LIVE</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('report')">📝 Report</button>
+    <button class="tab" onclick="showTab('alerts')">🚨 Alerts</button>
+    <button class="tab" onclick="showTab('shelters')">🏠 Shelters</button>
+    <button class="tab" onclick="showTab('emergency')">🆘 SOS</button>
+  </div>
+
+  <!-- ── REPORT TAB ──────────────────────────────── -->
+  <div id="tab-report" class="content">
+    <div id="report-form">
+      <div class="form-group">
+        <label>📍 Location / Mahali</label>
+        <input id="r-location" type="text" placeholder="e.g. Kisumu CBD, Westlands Nairobi"/>
+        <button class="loc-btn" style="margin-top:8px" onclick="getLocation()">
+          📡 Use my GPS location / Tumia GPS yangu
+        </button>
+      </div>
+      <div class="form-group">
+        <label>🏙️ County / Kaunti</label>
+        <select id="r-county">
+          <option value="">Select county / Chagua kaunti...</option>
+          <option>Nairobi</option><option>Mombasa</option><option>Kisumu</option>
+          <option>Nakuru</option><option>Eldoret</option><option>Kisii</option>
+          <option>Nyeri</option><option>Meru</option><option>Kakamega</option>
+          <option>Machakos</option><option>Kilifi</option><option>Garissa</option>
+          <option>Turkana</option><option>Mandera</option><option>Narok</option>
+          <option>Migori</option><option>Homa Bay</option><option>Siaya</option>
+          <option>Bungoma</option><option>Busia</option><option>Kajiado</option>
+          <option>Kiambu</option><option>Baringo</option><option>Kericho</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>⚠️ Severity / Kiwango cha Hatari</label>
+        <div class="sev-grid">
+          <button class="sev-btn" data-n="1" onclick="setSev(1)">1</button>
+          <button class="sev-btn active" data-n="2" onclick="setSev(2)">2</button>
+          <button class="sev-btn" data-n="3" onclick="setSev(3)">3</button>
+          <button class="sev-btn" data-n="4" onclick="setSev(4)">4</button>
+          <button class="sev-btn" data-n="5" onclick="setSev(5)">5</button>
+        </div>
+        <p id="sev-label" style="font-size:12px;color:#6b7280;margin-top:6px">2 — Moderate / Onyo</p>
+      </div>
+      <div class="form-group">
+        <label>💧 Water Level / Kiwango cha Maji</label>
+        <select id="r-waterlevel">
+          <option value="">Not sure / Sijui</option>
+          <option value="ankle">Ankle / Kifundo</option>
+          <option value="knee">Knee / Magoti</option>
+          <option value="waist">Waist / Kiuno</option>
+          <option value="shoulder">Shoulder / Bega</option>
+          <option value="head">Head level — CRITICAL / Kichwa — HATARI</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="rescue-toggle">
+          <input type="checkbox" id="r-rescue"/>
+          <span>🆘 People need rescue / Watu wanahitaji uokoaji</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label>📝 Description / Maelezo (optional)</label>
+        <textarea id="r-desc" rows="3" placeholder="Describe the situation in English or Kiswahili..."></textarea>
+      </div>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">
+        🌊 Submit Report / Tuma Ripoti
+      </button>
+    </div>
+    <div class="success-box" id="success-box">
+      <div class="icon">✅</div>
+      <h2>Report Submitted!</h2>
+      <p>Ripoti imehifadhiwa.<br/>Stay safe — move to higher ground!</p>
+      <p style="margin-top:8px;font-size:13px;color:#dc2626">📞 Red Cross: <strong>0800 723 000</strong></p>
+      <button class="btn btn-outline" style="margin-top:16px" onclick="resetForm()">Report Another / Toa Nyingine</button>
+    </div>
+  </div>
+
+  <!-- ── ALERTS TAB ──────────────────────────────── -->
+  <div id="tab-alerts" class="content hidden">
+    <div id="alerts-loader" class="loader"><div class="spinner"></div></div>
+    <div id="alerts-list"></div>
+  </div>
+
+  <!-- ── SHELTERS TAB ────────────────────────────── -->
+  <div id="tab-shelters" class="content hidden">
+    <button class="loc-btn" onclick="findShelters()">
+      📡 Find shelters near me / Tafuta makazi karibu
+    </button>
+    <div id="shelters-loader" class="loader hidden"><div class="spinner"></div></div>
+    <div id="shelters-list"></div>
+  </div>
+
+  <!-- ── EMERGENCY TAB ───────────────────────────── -->
+  <div id="tab-emergency" class="content hidden">
+    <div class="emergency-card">
+      <div><div class="name">🔴 Kenya Red Cross</div><div style="font-size:11px;color:#6b7280">Toll-free • Bure</div></div>
+      <a href="tel:0800723000" class="num">0800 723 000</a>
+    </div>
+    <div class="emergency-card">
+      <div><div class="name">🚨 Kenya Police</div></div>
+      <a href="tel:999" class="num">999 / 112</a>
+    </div>
+    <div class="emergency-card">
+      <div><div class="name">🏥 Medical Emergency</div></div>
+      <a href="tel:0800720021" class="num">0800 720 021</a>
+    </div>
+    <div class="emergency-card">
+      <div><div class="name">🌊 NDMA Disasters</div></div>
+      <a href="tel:+254202737985" class="num">+254 20 2737985</a>
+    </div>
+    <div class="emergency-card">
+      <div><div class="name">🌦 Meteorological Dept</div></div>
+      <a href="tel:+254203867880" class="num">+254 20 3867880</a>
+    </div>
+    <div style="margin-top:20px;padding:14px;background:#fef2f2;border-radius:10px;border:1.5px solid #fecaca">
+      <p style="font-size:13px;color:#991b1b;font-weight:600;margin-bottom:6px">⬆️ Flood Safety / Usalama wa Mafuriko</p>
+      <ul style="font-size:12px;color:#7f1d1d;padding-left:18px;line-height:1.8">
+        <li>Move to higher ground immediately</li>
+        <li>Enda mahali pa juu haraka</li>
+        <li>Do not walk in moving floodwater</li>
+        <li>Usitembee kwenye maji yanayotiririka</li>
+        <li>Stay away from drains and streams</li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+  // ── Telegram WebApp init ──────────────────────────────────────
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    if (tg.colorScheme === 'dark') document.body.classList.add('dark');
+  }
+
+  const API = 'http://localhost:8000'; // Replace with Render URL after deploy
+
+  let selectedSev = 2;
+  let reportLat = null, reportLng = null;
+
+  const SEV_LABELS = {
+    1:'1 — Watch / Usalama', 2:'2 — Moderate / Onyo',
+    3:'3 — Severe / Kali', 4:'4 — Critical / Hatari Sana',
+    5:'5 — Emergency / Dharura'
+  };
+
+  // ── Tabs ──────────────────────────────────────────────────────
+  function showTab(name) {
+    ['report','alerts','shelters','emergency'].forEach(t => {
+      document.getElementById('tab-'+t).classList.add('hidden');
+      document.querySelectorAll('.tab')[['report','alerts','shelters','emergency'].indexOf(t)].classList.remove('active');
+    });
+    document.getElementById('tab-'+name).classList.remove('hidden');
+    event.currentTarget.classList.add('active');
+    if (name === 'alerts') loadAlerts();
+  }
+
+  // ── Severity ──────────────────────────────────────────────────
+  function setSev(n) {
+    selectedSev = n;
+    document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.sev-btn[data-n="${n}"]`).classList.add('active');
+    document.getElementById('sev-label').textContent = SEV_LABELS[n];
+  }
+
+  // ── GPS ────────────────────────────────────────────────────────
+  function getLocation() {
+    if (tg?.LocationManager) {
+      tg.LocationManager.getLocation(loc => {
+        if (loc) {
+          reportLat = loc.latitude;
+          reportLng = loc.longitude;
+          document.getElementById('r-location').value = `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
+        }
+      });
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          reportLat = pos.coords.latitude;
+          reportLng = pos.coords.longitude;
+          document.getElementById('r-location').value = `${reportLat.toFixed(4)}, ${reportLng.toFixed(4)}`;
+        },
+        () => alert('Could not get location. Please type it manually.')
+      );
+    }
+  }
+
+  // ── Submit Report ─────────────────────────────────────────────
+  async function submitReport() {
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving...';
+
+    const payload = {
+      source:       'telegram_miniapp',
+      language:     'en',
+      location:     document.getElementById('r-location').value || undefined,
+      county:       document.getElementById('r-county').value || undefined,
+      severity:     selectedSev,
+      water_level:  document.getElementById('r-waterlevel').value || undefined,
+      needs_rescue: document.getElementById('r-rescue').checked,
+      raw_message:  document.getElementById('r-desc').value || undefined,
+      lat:          reportLat,
+      lng:          reportLng,
+    };
+
+    try {
+      const res = await fetch(`${API}/reports/`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById('report-form').style.display = 'none';
+      document.getElementById('success-box').style.display = 'block';
+      if (tg) tg.HapticFeedback?.notificationOccurred('success');
+    } catch {
+      alert('Failed to submit. Please try again.\nImeshindwa. Jaribu tena.');
+      btn.disabled = false;
+      btn.textContent = '🌊 Submit Report / Tuma Ripoti';
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('report-form').style.display = 'block';
+    document.getElementById('success-box').style.display = 'none';
+    document.getElementById('r-location').value = '';
+    document.getElementById('r-county').value = '';
+    document.getElementById('r-desc').value = '';
+    document.getElementById('r-rescue').checked = false;
+    document.getElementById('r-waterlevel').value = '';
+    setSev(2);
+    reportLat = null; reportLng = null;
+  }
+
+  // ── Load Alerts ───────────────────────────────────────────────
+  async function loadAlerts() {
+    const loader = document.getElementById('alerts-loader');
+    const list   = document.getElementById('alerts-list');
+    loader.classList.remove('hidden');
+    list.innerHTML = '';
+
+    try {
+      const res = await fetch(`${API}/reports/?hours=6&severity_min=2&limit=20`);
+      const reports = await res.json();
+      loader.classList.add('hidden');
+
+      if (!reports.length) {
+        list.innerHTML = '<div class="empty">✅ No active flood alerts in the last 6 hours.</div>';
+        return;
+      }
+
+      const SEV_NAMES = {1:'Watch',2:'Moderate',3:'Severe',4:'Critical',5:'Emergency'};
+      reports.forEach(r => {
+        const ago = timeAgo(r.created_at);
+        list.innerHTML += `
+          <div class="alert-card ${r.needs_rescue?'rescue':''}">
+            <div class="alert-top">
+              <span class="sev-badge sev-${r.severity}">${SEV_NAMES[r.severity]||r.severity}</span>
+              ${r.needs_rescue ? '<span class="rescue-badge">🆘 RESCUE</span>' : ''}
+              ${r.verified ? '<span style="color:#16a34a;font-size:11px">✓ verified</span>' : ''}
+            </div>
+            <div class="alert-loc">📍 ${r.location || r.county || 'Kenya'}</div>
+            ${r.water_level ? `<div class="alert-msg">💧 ${r.water_level}</div>` : ''}
+            ${r.raw_message ? `<div class="alert-msg">"${r.raw_message.slice(0,80)}"</div>` : ''}
+            <div class="alert-time">🕐 ${ago} · ${r.source}</div>
+          </div>`;
+      });
+    } catch {
+      loader.classList.add('hidden');
+      list.innerHTML = '<div class="empty">❌ Could not load alerts. Check your connection.</div>';
+    }
+  }
+
+  // ── Find Shelters ─────────────────────────────────────────────
+  function findShelters() {
+    const loader = document.getElementById('shelters-loader');
+    const list   = document.getElementById('shelters-list');
+    loader.classList.remove('hidden');
+    list.innerHTML = '';
+
+    const gotCoords = async (lat, lng) => {
+      try {
+        const res = await fetch(`${API}/shelters/nearby?lat=${lat}&lng=${lng}&limit=5`);
+        const shelters = await res.json();
+        loader.classList.add('hidden');
+
+        if (!shelters.length) {
+          list.innerHTML = '<div class="empty">No shelters recorded nearby.<br/>📞 Call Red Cross: 0800 723 000</div>';
+          return;
+        }
+
+        shelters.forEach(s => {
+          list.innerHTML += `
+            <div class="shelter-card">
+              <div>
+                <div class="shelter-name">${s.name}</div>
+                <div class="shelter-info">${s.type}${s.capacity?` · ${s.capacity} people`:''}</div>
+                ${s.contact ? `<a href="tel:${s.contact}" class="shelter-phone">📞 ${s.contact}</a>` : ''}
+              </div>
+              <div class="shelter-dist">${s.distance_km} km</div>
+            </div>`;
+        });
+      } catch {
+        loader.classList.add('hidden');
+        list.innerHTML = '<div class="empty">❌ Error loading shelters.</div>';
+      }
+    };
+
+    if (tg?.LocationManager) {
+      tg.LocationManager.getLocation(loc => {
+        if (loc) gotCoords(loc.latitude, loc.longitude);
+        else { loader.classList.add('hidden'); list.innerHTML = '<div class="empty">Could not get location.</div>'; }
+      });
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => gotCoords(pos.coords.latitude, pos.coords.longitude),
+        () => { loader.classList.add('hidden'); list.innerHTML = '<div class="empty">Location access denied. Please enable GPS.</div>'; }
+      );
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function timeAgo(ts) {
+    const s = Math.round((Date.now() - new Date(ts)) / 1000);
+    if (s < 60)  return `${s}s ago`;
+    if (s < 3600) return `${Math.round(s/60)}m ago`;
+    return `${Math.round(s/3600)}h ago`;
+  }
+</script>
+</body>
+</html>
