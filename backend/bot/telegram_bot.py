@@ -20,7 +20,8 @@ from telegram.ext import (
 )
 
 log = logging.getLogger(__name__)
-API_BASE     = os.getenv("API_BASE_URL", "http://localhost:8000")
+_port    = os.getenv("PORT", "8000")
+API_BASE = os.getenv("API_BASE_URL", f"http://localhost:{_port}")
 MINI_APP_URL = os.getenv("MINI_APP_URL", "")   # set after deploy to Render
 
 # ── Conversation states ────────────────────────────────────────
