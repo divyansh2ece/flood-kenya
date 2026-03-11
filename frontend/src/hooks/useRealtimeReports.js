@@ -36,15 +36,17 @@ export function useRealtimeReports(hours = 24) {
     fetchReports()
     fetchStats()
 
+    // ── Supabase Realtime (instant push) ──────────────────────
+    // Requires "flood_reports" table to have Realtime enabled in
+    // Supabase Dashboard → Database → Replication.
     const channel = supabase
-      .channel('flood_reports_live')
+      .channel(`flood_reports_live_${hours}`)
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'flood_reports' },
         (payload) => {
           setReports(prev => [payload.new, ...prev])
-          // Optimistically bump reports_24h
           setStats(prev => ({ ...prev, reports_24h: prev.reports_24h + 1 }))
-          fetchStats()   // then confirm from server
+          fetchStats()
         }
       )
       .on('postgres_changes',
@@ -53,13 +55,22 @@ export function useRealtimeReports(hours = 24) {
           setReports(prev =>
             prev.map(r => r.id === payload.new.id ? payload.new : r)
           )
-          fetchStats()   // UPDATE events (resolve/verify) always refresh stats
+          fetchStats()
         }
       )
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
-  }, [fetchReports, fetchStats])
+    // ── Fallback poll every 30 s (catches missed events) ──────
+    const poll = setInterval(() => {
+      fetchReports()
+      fetchStats()
+    }, 30_000)
+
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(poll)
+    }
+  }, [fetchReports, fetchStats, hours])
 
   const resolveReport = async (id) => {
     // 1. Optimistic: immediately remove from active list + update stats in UI
