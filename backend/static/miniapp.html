@@ -126,19 +126,26 @@
     .sev-option.selected .sev-check { opacity: 1; }
 
     /* ── STEP 3 — Water Level ────────────────────────────── */
-    .wl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .wl-grid { display: flex; flex-direction: column; gap: 8px; }
     .wl-btn {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 6px; padding: 14px 8px; border-radius: var(--r);
+      display: flex; flex-direction: row; align-items: center;
+      gap: 14px; padding: 10px 14px; border-radius: var(--r);
       border: 2px solid var(--border); background: var(--surface);
       cursor: pointer; transition: all .15s; font-family: inherit;
+      text-align: left; width: 100%;
     }
-    .wl-btn:active { transform: scale(.97); }
-    .wl-btn.selected { border-color: var(--blue); background: #eff6ff; }
-    .dark .wl-btn.selected { background: #1e2d4f; }
-    .wl-ico   { font-size: 28px; line-height: 1; }
-    .wl-label { font-size: 12px; font-weight: 700; color: var(--text); }
-    .wl-sw    { font-size: 10px; color: var(--muted); }
+    .wl-btn:active { transform: scale(.98); }
+    .wl-btn.selected { border-width: 2.5px; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    .wl-svg { flex-shrink: 0; display: block; }
+    /* Person stick-figure lines — adapts to dark mode */
+    .wl-person { stroke: #334155; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .dark .wl-person { stroke: #94a3b8; }
+    .wl-text { flex: 1; min-width: 0; }
+    .wl-label { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .wl-sw    { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .wl-desc  { font-size: 10px; color: var(--muted); margin-top: 3px; opacity: .8; }
+    .wl-chk   { font-size: 20px; font-weight: 700; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+    .wl-btn.selected .wl-chk { opacity: 1; }
 
     /* skip button */
     .skip-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 12px; border: 1.5px dashed var(--border); border-radius: var(--r); background: none; color: var(--muted); font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
@@ -355,33 +362,114 @@
             </div>
 
             <div class="wl-grid">
-              <button class="wl-btn" data-wl="ankle" onclick="setWL('ankle')">
-                <div class="wl-ico">🦶</div>
-                <div class="wl-label">Ankle</div>
-                <div class="wl-sw">Kifundo</div>
+
+              <!-- ANKLE -->
+              <button class="wl-btn" data-wl="ankle" onclick="setWL('ankle')" style="border-color:#93c5fd;background:#eff6ff">
+                <svg class="wl-svg" viewBox="0 0 44 84" width="36" height="68">
+                  <rect x="0" y="70" width="44" height="14" fill="#60a5fa" rx="2" opacity="0.65"/>
+                  <line x1="0" y1="70" x2="44" y2="70" stroke="#3b82f6" stroke-width="1.5" opacity="0.85"/>
+                  <g class="wl-person" stroke-width="2.5">
+                    <circle cx="22" cy="8" r="7"/><line x1="22" y1="15" x2="22" y2="19"/>
+                    <line x1="9" y1="24" x2="35" y2="24"/><line x1="9" y1="24" x2="4" y2="44"/><line x1="35" y1="24" x2="40" y2="44"/>
+                    <line x1="22" y1="19" x2="22" y2="52"/><line x1="13" y1="52" x2="31" y2="52"/>
+                    <line x1="13" y1="52" x2="8" y2="78"/><line x1="31" y1="52" x2="36" y2="78"/>
+                    <line x1="8" y1="78" x2="5" y2="82" stroke-width="2"/><line x1="36" y1="78" x2="39" y2="82" stroke-width="2"/>
+                  </g>
+                </svg>
+                <div class="wl-text">
+                  <div class="wl-label" style="color:#1d4ed8">Ankle <span style="font-size:12px;font-weight:500">· Kifundo</span></div>
+                  <div class="wl-desc">Water just at your feet</div>
+                  <div class="wl-desc">Maji miguuni tu</div>
+                </div>
+                <div class="wl-chk" style="color:#3b82f6">✓</div>
               </button>
-              <button class="wl-btn" data-wl="knee" onclick="setWL('knee')">
-                <div class="wl-ico">🦵</div>
-                <div class="wl-label">Knee</div>
-                <div class="wl-sw">Magoti</div>
+
+              <!-- KNEE -->
+              <button class="wl-btn" data-wl="knee" onclick="setWL('knee')" style="border-color:#60a5fa;background:#dbeafe">
+                <svg class="wl-svg" viewBox="0 0 44 84" width="36" height="68">
+                  <rect x="0" y="58" width="44" height="26" fill="#3b82f6" rx="2" opacity="0.6"/>
+                  <line x1="0" y1="58" x2="44" y2="58" stroke="#2563eb" stroke-width="1.5" opacity="0.85"/>
+                  <g class="wl-person" stroke-width="2.5">
+                    <circle cx="22" cy="8" r="7"/><line x1="22" y1="15" x2="22" y2="19"/>
+                    <line x1="9" y1="24" x2="35" y2="24"/><line x1="9" y1="24" x2="4" y2="44"/><line x1="35" y1="24" x2="40" y2="44"/>
+                    <line x1="22" y1="19" x2="22" y2="52"/><line x1="13" y1="52" x2="31" y2="52"/>
+                    <line x1="13" y1="52" x2="8" y2="78"/><line x1="31" y1="52" x2="36" y2="78"/>
+                    <line x1="8" y1="78" x2="5" y2="82" stroke-width="2"/><line x1="36" y1="78" x2="39" y2="82" stroke-width="2"/>
+                  </g>
+                </svg>
+                <div class="wl-text">
+                  <div class="wl-label" style="color:#1e40af">Knee <span style="font-size:12px;font-weight:500">· Magoti</span></div>
+                  <div class="wl-desc">Water up to your knees</div>
+                  <div class="wl-desc">Maji hadi magotini</div>
+                </div>
+                <div class="wl-chk" style="color:#2563eb">✓</div>
               </button>
-              <button class="wl-btn" data-wl="waist" onclick="setWL('waist')">
-                <div class="wl-ico">⬆️</div>
-                <div class="wl-label">Waist</div>
-                <div class="wl-sw">Kiuno</div>
+
+              <!-- WAIST -->
+              <button class="wl-btn" data-wl="waist" onclick="setWL('waist')" style="border-color:#fdba74;background:#fff7ed">
+                <svg class="wl-svg" viewBox="0 0 44 84" width="36" height="68">
+                  <rect x="0" y="38" width="44" height="46" fill="#fb923c" rx="2" opacity="0.55"/>
+                  <line x1="0" y1="38" x2="44" y2="38" stroke="#f97316" stroke-width="1.5" opacity="0.9"/>
+                  <g class="wl-person" stroke-width="2.5">
+                    <circle cx="22" cy="8" r="7"/><line x1="22" y1="15" x2="22" y2="19"/>
+                    <line x1="9" y1="24" x2="35" y2="24"/><line x1="9" y1="24" x2="4" y2="44"/><line x1="35" y1="24" x2="40" y2="44"/>
+                    <line x1="22" y1="19" x2="22" y2="52"/><line x1="13" y1="52" x2="31" y2="52"/>
+                    <line x1="13" y1="52" x2="8" y2="78"/><line x1="31" y1="52" x2="36" y2="78"/>
+                    <line x1="8" y1="78" x2="5" y2="82" stroke-width="2"/><line x1="36" y1="78" x2="39" y2="82" stroke-width="2"/>
+                  </g>
+                </svg>
+                <div class="wl-text">
+                  <div class="wl-label" style="color:#c2410c">Waist <span style="font-size:12px;font-weight:500">· Kiuno</span></div>
+                  <div class="wl-desc">Water at your stomach</div>
+                  <div class="wl-desc">Maji hadi tumboni ⚠️</div>
+                </div>
+                <div class="wl-chk" style="color:#f97316">✓</div>
               </button>
-              <button class="wl-btn" data-wl="shoulder" onclick="setWL('shoulder')">
-                <div class="wl-ico">💪</div>
-                <div class="wl-label">Shoulder</div>
-                <div class="wl-sw">Bega</div>
+
+              <!-- SHOULDER -->
+              <button class="wl-btn" data-wl="shoulder" onclick="setWL('shoulder')" style="border-color:#fca5a5;background:#fef2f2">
+                <svg class="wl-svg" viewBox="0 0 44 84" width="36" height="68">
+                  <rect x="0" y="22" width="44" height="62" fill="#ef4444" rx="2" opacity="0.5"/>
+                  <line x1="0" y1="22" x2="44" y2="22" stroke="#dc2626" stroke-width="1.5" opacity="0.9"/>
+                  <g class="wl-person" stroke-width="2.5">
+                    <circle cx="22" cy="8" r="7"/><line x1="22" y1="15" x2="22" y2="19"/>
+                    <line x1="9" y1="24" x2="35" y2="24"/><line x1="9" y1="24" x2="4" y2="44"/><line x1="35" y1="24" x2="40" y2="44"/>
+                    <line x1="22" y1="19" x2="22" y2="52"/><line x1="13" y1="52" x2="31" y2="52"/>
+                    <line x1="13" y1="52" x2="8" y2="78"/><line x1="31" y1="52" x2="36" y2="78"/>
+                    <line x1="8" y1="78" x2="5" y2="82" stroke-width="2"/><line x1="36" y1="78" x2="39" y2="82" stroke-width="2"/>
+                  </g>
+                </svg>
+                <div class="wl-text">
+                  <div class="wl-label" style="color:#991b1b">Shoulder <span style="font-size:12px;font-weight:500">· Bega</span></div>
+                  <div class="wl-desc">Water at your shoulders</div>
+                  <div class="wl-desc">Maji hadi mabegani 🔴</div>
+                </div>
+                <div class="wl-chk" style="color:#ef4444">✓</div>
               </button>
-              <button class="wl-btn" data-wl="head" onclick="setWL('head')" style="grid-column:1/-1;border-color:#ef4444;background:#fef2f2">
-                <div class="wl-ico">🚨</div>
-                <div class="wl-label" style="color:#991b1b">Head level — CRITICAL</div>
-                <div class="wl-sw" style="color:#b91c1c">Kichwa — HATARI</div>
+
+              <!-- HEAD — CRITICAL -->
+              <button class="wl-btn" data-wl="head" onclick="setWL('head')" style="border-color:#7f1d1d;background:#450a0a;color:#fca5a5">
+                <svg class="wl-svg" viewBox="0 0 44 84" width="36" height="68">
+                  <rect x="0" y="1" width="44" height="83" fill="#7f1d1d" rx="2" opacity="0.85"/>
+                  <line x1="0" y1="1" x2="44" y2="1" stroke="#ef4444" stroke-width="2" opacity="1"/>
+                  <g class="wl-person" stroke-width="2.5" style="stroke:#fca5a5">
+                    <circle cx="22" cy="8" r="7"/><line x1="22" y1="15" x2="22" y2="19"/>
+                    <line x1="9" y1="24" x2="35" y2="24"/><line x1="9" y1="24" x2="4" y2="44"/><line x1="35" y1="24" x2="40" y2="44"/>
+                    <line x1="22" y1="19" x2="22" y2="52"/><line x1="13" y1="52" x2="31" y2="52"/>
+                    <line x1="13" y1="52" x2="8" y2="78"/><line x1="31" y1="52" x2="36" y2="78"/>
+                    <line x1="8" y1="78" x2="5" y2="82" stroke-width="2"/><line x1="36" y1="78" x2="39" y2="82" stroke-width="2"/>
+                  </g>
+                </svg>
+                <div class="wl-text">
+                  <div class="wl-label" style="color:#fca5a5;font-size:15px">⛔ Head level · Kichwa</div>
+                  <div class="wl-desc" style="color:#fca5a5;opacity:.9">Person fully submerged — CRITICAL</div>
+                  <div class="wl-desc" style="color:#fca5a5;opacity:.9">Mtu amezama kabisa — HATARI SANA</div>
+                </div>
+                <div class="wl-chk" style="color:#ef4444">✓</div>
               </button>
+
             </div>
-            <button class="skip-btn" onclick="setWL(null)">Skip — Not sure / Ruka — Sijui</button>
+            <button class="skip-btn" onclick="setWL(null)">Not sure? Skip / Sijui? Ruka</button>
           </div>
 
           <!-- ── STEP 4: Confirm ───────────────────────── -->
@@ -671,13 +759,18 @@ async function submitReport() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      let detail = '';
+      try { const j = await res.json(); detail = j.detail || JSON.stringify(j); } catch {}
+      throw new Error(`HTTP ${res.status}: ${detail}`);
+    }
     document.getElementById('wiz-body').style.display    = 'none';
     document.getElementById('wiz-success').classList.add('show');
     tg?.HapticFeedback?.notificationOccurred('success');
-  } catch {
+  } catch (err) {
     btn.disabled = false; btn.textContent = '🌊 Submit Report';
-    alert('Failed to submit. Check your connection.\nImeshindwa. Angalia muunganisho wako.');
+    console.error('Submit failed:', err);
+    alert(`Submit failed: ${err.message}\n\nAPI: ${API}`);
   }
 }
 
