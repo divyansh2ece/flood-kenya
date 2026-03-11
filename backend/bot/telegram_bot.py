@@ -641,12 +641,13 @@ async def handle_wl_callback_in_flow(update: Update, context: ContextTypes.DEFAU
 
 def _run_bot_sync(token: str):
     """
-    Runs in a daemon thread with its own standard asyncio event loop.
-    MUST use asyncio.new_event_loop() explicitly — uvicorn installs uvloop as the
-    global event loop policy, which bleeds into new threads and causes
-    'this event loop is already running' errors inside PTB's run_polling().
-    Forcing a plain asyncio loop in this thread sidesteps that entirely.
+    Runs in a daemon thread with a PLAIN asyncio event loop.
+    uvicorn + uvloop sets DefaultEventLoopPolicy globally to uvloop's policy,
+    so asyncio.new_event_loop() still creates a uvloop even in new threads.
+    We must explicitly reset the policy to asyncio.DefaultEventLoopPolicy()
+    before creating the loop so PTB gets a plain asyncio loop it can control.
     """
+    asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
@@ -678,10 +679,20 @@ def _run_bot_sync(token: str):
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
         log.info("Bot starting polling...")
-        await application.run_polling(drop_pending_updates=True, stop_signals=None)
+        await application.initialize()
+        await application.start()
+        await application.updater.start_polling(drop_pending_updates=True)
+        try:
+            await asyncio.Event().wait()   # block forever (until thread is killed)
+        finally:
+            await application.updater.stop()
+            await application.stop()
+            await application.shutdown()
 
-    loop.run_until_complete(_main())
-    loop.close()
+    try:
+        loop.run_until_complete(_main())
+    finally:
+        loop.close()
 
 
 def start_bot_thread(token: str) -> threading.Thread:
