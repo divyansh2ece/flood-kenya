@@ -1,20 +1,17 @@
 import { useTranslation } from 'react-i18next'
 
 export default function LanguageToggle() {
-  const { i18n, t } = useTranslation()
-
-  const toggle = () => {
-    i18n.changeLanguage(i18n.language === 'sw' ? 'en' : 'sw')
-  }
+  const { i18n } = useTranslation()
+  const isSw = i18n.language === 'sw'
 
   return (
     <button
-      onClick={toggle}
-      className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+      onClick={() => i18n.changeLanguage(isSw ? 'en' : 'sw')}
+      className="flex items-center gap-1.5 bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 border border-slate-200 dark:border-navy-500 rounded-lg px-2 py-1.5 text-xs font-bold tracking-wide transition-colors"
       title="Switch language / Badilisha lugha"
     >
-      <span>{i18n.language === 'sw' ? '🇬🇧' : '🇰🇪'}</span>
-      <span className="hidden sm:block text-gray-600 dark:text-gray-300 text-xs">{t('switchLang')}</span>
+      <span>{isSw ? '🇬🇧' : '🇰🇪'}</span>
+      <span className="hidden sm:block text-slate-600 dark:text-slate-300">{isSw ? 'EN' : 'SW'}</span>
     </button>
   )
 }

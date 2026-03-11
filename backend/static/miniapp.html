@@ -2,617 +2,778 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <title>FloodWatch Kenya</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
     :root {
-      --bg:      #ffffff;
-      --surface: #f3f4f6;
-      --border:  #e5e7eb;
-      --text:    #111827;
-      --muted:   #6b7280;
-      --blue:    #2563eb;
-      --red:     #dc2626;
-      --green:   #16a34a;
-      --orange:  #ea580c;
+      --bg:       #f8fafc;
+      --surface:  #ffffff;
+      --surface2: #f1f5f9;
+      --border:   #e2e8f0;
+      --text:     #0f172a;
+      --muted:    #64748b;
+      --blue:     #2563eb;
+      --red:      #ef4444;
+      --green:    #22c55e;
+      --orange:   #f97316;
+      --yellow:   #eab308;
+      --r:        12px;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    /* Dark mode via Telegram theme */
-    body.dark {
-      --bg:      #0f172a;
-      --surface: #1e293b;
-      --border:  #334155;
-      --text:    #f1f5f9;
-      --muted:   #94a3b8;
+    .dark {
+      --bg:       #0b1221;
+      --surface:  #132038;
+      --surface2: #1a2d4a;
+      --border:   #1e3455;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
     }
 
-    .header {
-      background: var(--blue);
-      color: white;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .header h1 { font-size: 16px; font-weight: 700; }
-    .header .live {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      opacity: 0.9;
-    }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #4ade80;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Chakra Petch', sans-serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
 
-    .tabs {
-      display: flex;
-      border-bottom: 2px solid var(--border);
-      background: var(--bg);
-      position: sticky;
-      top: 48px;
-      z-index: 9;
-    }
-    .tab {
-      flex: 1;
-      padding: 10px 4px;
-      font-size: 12px;
-      font-weight: 600;
-      text-align: center;
-      color: var(--muted);
-      border: none;
-      background: none;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      transition: color 0.2s;
-    }
-    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .app { display: flex; flex-direction: column; height: 100%; padding-bottom: env(safe-area-inset-bottom, 12px); }
 
-    .content { padding: 12px 14px; }
-    .hidden { display: none !important; }
+    /* ── Header ────────────────────────────────────────────── */
+    .hdr { background: var(--blue); padding: 11px 16px 10px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .hdr-ico { width: 30px; height: 30px; background: rgba(255,255,255,0.2); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .hdr-t { font-size: 15px; font-weight: 700; color: white; letter-spacing: .5px; }
+    .hdr-s { font-size: 10px; color: rgba(255,255,255,.65); text-transform: uppercase; letter-spacing: 1px; }
+    .live  { margin-left: auto; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); border-radius: 99px; padding: 3px 9px; font-size: 10px; color: #fff; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+    .dot   { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    /* ── Report Form ─────────────────────────── */
-    .form-group { margin-bottom: 14px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
-    input, select, textarea {
-      width: 100%;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-      font-family: inherit;
-    }
-    input:focus, select:focus, textarea:focus { border-color: var(--blue); }
-    textarea { resize: none; }
+    /* ── Pages ──────────────────────────────────────────────── */
+    .page { flex: 1; overflow-y: auto; overflow-x: hidden; display: none; flex-direction: column; -webkit-overflow-scrolling: touch; }
+    .page.active { display: flex; }
 
-    .sev-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-    }
-    .sev-btn {
-      padding: 8px 4px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      text-align: center;
-      transition: all 0.15s;
-    }
-    .sev-btn.active { color: white; border-color: transparent; }
-    .sev-btn[data-n="1"].active { background: #16a34a; }
-    .sev-btn[data-n="2"].active { background: #ca8a04; }
-    .sev-btn[data-n="3"].active { background: #ea580c; }
-    .sev-btn[data-n="4"].active { background: #dc2626; }
-    .sev-btn[data-n="5"].active { background: #7f1d1d; }
+    /* ── Bottom nav ─────────────────────────────────────────── */
+    .nav { flex-shrink: 0; display: grid; grid-template-columns: repeat(4,1fr); background: var(--surface); border-top: 1.5px solid var(--border); }
+    .nb  { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 9px 4px 7px; border: none; background: none; cursor: pointer; color: var(--muted); font-family: inherit; position: relative; transition: color .15s; }
+    .nb.active { color: var(--blue); }
+    .nb.active::after { content:''; position: absolute; top:0; left:20%; right:20%; height: 2.5px; background: var(--blue); border-radius: 0 0 3px 3px; }
+    .nb-ic { font-size: 18px; line-height: 1; }
+    .nb-lb { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 
-    .rescue-toggle {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #fef2f2;
-      border: 1.5px solid #fecaca;
-      border-radius: 8px;
-      padding: 10px 12px;
-      cursor: pointer;
-    }
-    body.dark .rescue-toggle { background: #450a0a; border-color: #7f1d1d; }
-    .rescue-toggle input { width: auto; }
-    .rescue-toggle span { font-size: 13px; color: var(--text); }
+    /* ═══════════════════════════════════════════════════════
+       REPORT WIZARD
+    ═══════════════════════════════════════════════════════ */
+    .wizard { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-    .btn {
-      width: 100%;
-      padding: 13px;
-      border-radius: 10px;
-      border: none;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--blue); color: white; }
-    .btn-green   { background: var(--green); color: white; }
-    .btn-outline {
-      background: var(--surface);
-      color: var(--text);
-      border: 1.5px solid var(--border);
-    }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* Step bar */
+    .step-bar { display: flex; align-items: center; gap: 0; padding: 14px 20px 12px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: 'DM Mono', monospace; transition: all .25s; flex-shrink: 0; }
+    .step-dot.done    { background: var(--blue); color: white; }
+    .step-dot.current { background: var(--blue); color: white; box-shadow: 0 0 0 3px rgba(37,99,235,.25); }
+    .step-dot.pending { background: var(--surface2); color: var(--muted); border: 1.5px solid var(--border); }
+    .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 4px; transition: background .25s; }
+    .step-line.done { background: var(--blue); }
 
-    .success-box {
-      text-align: center;
-      padding: 30px 20px;
-      display: none;
-    }
-    .success-box .icon { font-size: 52px; margin-bottom: 12px; }
-    .success-box h2 { color: var(--green); font-size: 18px; margin-bottom: 6px; }
-    .success-box p  { color: var(--muted); font-size: 13px; }
+    /* Slide viewport */
+    .slide-viewport { flex: 1; overflow: hidden; position: relative; }
+    .slide-track { display: flex; height: 100%; width: 400%; transition: transform .3s cubic-bezier(.4,0,.2,1); }
+    .slide { width: 25%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; padding: 20px 18px 12px; display: flex; flex-direction: column; gap: 14px; }
 
-    /* ── Alerts ──────────────────────────────── */
-    .alert-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-    .alert-card.rescue { border-color: #fca5a5; background: #fef2f2; }
-    body.dark .alert-card.rescue { border-color: #7f1d1d; background: #450a0a; }
-    .alert-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .sev-badge {
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 11px;
-      font-weight: 700;
-      color: white;
-    }
-    .sev-1 { background: #16a34a; }
-    .sev-2 { background: #ca8a04; }
-    .sev-3 { background: #ea580c; }
-    .sev-4 { background: #dc2626; }
-    .sev-5 { background: #7f1d1d; }
-    .rescue-badge {
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 11px;
-      font-weight: 700;
-      background: #dc2626;
-      color: white;
-      animation: pulse 1s infinite;
-    }
-    .alert-loc { font-size: 14px; font-weight: 600; color: var(--text); }
-    .alert-msg { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 2px; }
-    .alert-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    /* Step question */
+    .q-num  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 2px; }
+    .q-text { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.25; }
+    .q-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    /* ── Shelters ─────────────────────────────── */
-    .shelter-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+    /* ── STEP 1 — Location ───────────────────────────────── */
+    .gps-btn {
+      display: flex; align-items: center; gap: 12px;
+      background: #eff6ff; border: 2px solid #bfdbfe;
+      border-radius: var(--r); padding: 16px;
+      cursor: pointer; width: 100%; text-align: left;
+      transition: all .15s; font-family: inherit;
     }
-    .shelter-name { font-size: 13px; font-weight: 600; color: var(--text); }
-    .shelter-info { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .shelter-dist { font-size: 14px; font-weight: 700; color: var(--blue); white-space: nowrap; margin-left: 10px; }
-    .shelter-phone {
-      display: inline-block;
-      margin-top: 4px;
-      font-size: 12px;
-      color: var(--green);
-      text-decoration: none;
-    }
+    .dark .gps-btn { background: #1e2d4f; border-color: #1d4ed8; }
+    .gps-btn:active { transform: scale(.98); }
+    .gps-btn-ic { width: 40px; height: 40px; background: var(--blue); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .gps-btn-t { font-size: 14px; font-weight: 700; color: var(--blue); display: block; }
+    .dark .gps-btn-t { color: #93c5fd; }
+    .gps-btn-s { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
 
-    /* ── Emergency ────────────────────────────── */
-    .emergency-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .emergency-card .name { font-size: 13px; color: var(--muted); }
-    .emergency-card .num  { font-size: 16px; font-weight: 700; color: var(--red); text-decoration: none; }
+    .divider { display: flex; align-items: center; gap: 10px; }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-or   { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-    .loc-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 11px;
-      border-radius: 8px;
-      border: 1.5px solid var(--blue);
-      background: transparent;
-      color: var(--blue);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 10px;
+    .field-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 6px; display: block; }
+    input, select {
+      width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 11px 13px; font-size: 14px;
+      color: var(--text); font-family: inherit; outline: none; transition: border-color .15s;
     }
+    input:focus, select:focus { border-color: var(--blue); }
 
-    .empty { text-align: center; color: var(--muted); padding: 30px 0; font-size: 13px; }
-    .loader {
-      display: flex; justify-content: center; padding: 30px;
+    /* ── STEP 2 — Severity ───────────────────────────────── */
+    .sev-option {
+      display: flex; align-items: center; gap: 14px;
+      border-radius: var(--r); padding: 14px 16px;
+      cursor: pointer; border: 2px solid transparent;
+      transition: all .15s; font-family: inherit; width: 100%; text-align: left;
     }
-    .spinner {
-      width: 28px; height: 28px;
-      border: 3px solid var(--border);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+    .sev-option:active { transform: scale(.98); }
+    .sev-option.selected { border-color: currentColor; }
+    .sev-num  { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; color: white; flex-shrink: 0; }
+    .sev-title { font-size: 15px; font-weight: 700; display: block; }
+    .sev-desc  { font-size: 11px; opacity: .75; display: block; margin-top: 1px; }
+    .sev-check { margin-left: auto; font-size: 18px; opacity: 0; transition: opacity .15s; }
+    .sev-option.selected .sev-check { opacity: 1; }
+
+    /* ── STEP 3 — Water Level ────────────────────────────── */
+    .wl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .wl-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; padding: 14px 8px; border-radius: var(--r);
+      border: 2px solid var(--border); background: var(--surface);
+      cursor: pointer; transition: all .15s; font-family: inherit;
     }
+    .wl-btn:active { transform: scale(.97); }
+    .wl-btn.selected { border-color: var(--blue); background: #eff6ff; }
+    .dark .wl-btn.selected { background: #1e2d4f; }
+    .wl-ico   { font-size: 28px; line-height: 1; }
+    .wl-label { font-size: 12px; font-weight: 700; color: var(--text); }
+    .wl-sw    { font-size: 10px; color: var(--muted); }
+
+    /* skip button */
+    .skip-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 12px; border: 1.5px dashed var(--border); border-radius: var(--r); background: none; color: var(--muted); font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
+    .skip-btn:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── STEP 4 — Confirm ────────────────────────────────── */
+    .summary-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    .summary-row  { display: flex; justify-content: space-between; align-items: flex-start; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+    .summary-v { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; max-width: 60%; }
+
+    .rescue-row2 { display: flex; align-items: center; gap: 12px; background: #fef2f2; border: 2px solid #fecaca; border-radius: var(--r); padding: 14px 16px; cursor: pointer; font-family: inherit; width: 100%; text-align: left; transition: all .15s; }
+    .dark .rescue-row2 { background: #2d0a0a; border-color: #7f1d1d; }
+    .rescue-row2.on { border-color: var(--red); }
+    .rescue-row2-ic { width: 36px; height: 36px; background: #fecaca; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .dark .rescue-row2-ic { background: #7f1d1d; }
+    .rescue-row2-t { font-size: 14px; font-weight: 700; color: #991b1b; display: block; }
+    .dark .rescue-row2-t { color: #fca5a5; }
+    .rescue-row2-s { font-size: 11px; color: #b91c1c; display: block; margin-top: 1px; }
+    .dark .rescue-row2-s { color: #fca5a5; opacity: .7; }
+    .rescue-toggle-ico { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fecaca; background: white; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all .15s; flex-shrink: 0; }
+    .rescue-row2.on .rescue-toggle-ico { background: var(--red); border-color: var(--red); }
+
+    /* ── Wizard nav buttons ──────────────────────────────── */
+    .w-nav { display: flex; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .btn-back { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 16px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s; }
+    .btn-next { flex: 1; background: var(--blue); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s; letter-spacing: .3px; }
+    .btn-next:active, .btn-back:active { transform: scale(.98); }
+    .btn-next:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-submit { flex: 1; background: #16a34a; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s; letter-spacing: .3px; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Success ─────────────────────────────────────────── */
+    .success { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; gap: 10px; flex: 1; }
+    .success.show { display: flex; }
+    .success-ic { font-size: 60px; animation: pop .4s cubic-bezier(.34,1.56,.64,1) forwards; }
+    @keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+    .success-t { font-size: 20px; font-weight: 700; color: #16a34a; }
+    .success-s { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .sos-tel   { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; color: var(--red); }
+    .btn-reset { margin-top: 6px; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 24px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+
+    /* ═══════════════════════════════════════════════════════
+       ALERTS PAGE
+    ═══════════════════════════════════════════════════════ */
+    .page-pad { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .sec-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .alert-card { background: var(--surface); border: 1.5px solid var(--border); border-left: 4px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .alert-card.s1 { border-left-color: #22c55e; }
+    .alert-card.s2 { border-left-color: #eab308; }
+    .alert-card.s3 { border-left-color: #f97316; }
+    .alert-card.s4 { border-left-color: #ef4444; }
+    .alert-card.s5 { border-left-color: #7f1d1d; background: #fef2f2; }
+    .dark .alert-card.s5 { background: #2d0a0a; }
+    .alert-hdr { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 6px; }
+    .chip { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; color: white; text-transform: uppercase; letter-spacing: .5px; }
+    .sos-chip { background: #ef4444; animation: pulse 1s infinite; }
+    .alert-loc { font-size: 14px; font-weight: 600; }
+    .alert-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .alert-ft  { font-size: 11px; color: var(--muted); margin-top: 5px; font-family: 'DM Mono', monospace; }
+
+    /* ═══════════════════════════════════════════════════════
+       SHELTERS PAGE
+    ═══════════════════════════════════════════════════════ */
+    .gps-btn2 { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px; background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: var(--r); color: var(--blue); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .dark .gps-btn2 { background: #1e2d4f; border-color: #1d4ed8; color: #93c5fd; }
+    .shelter-card { display: flex; justify-content: space-between; align-items: flex-start; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+    .shelter-nm { font-size: 13px; font-weight: 700; }
+    .shelter-tp { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-top: 2px; }
+    .shelter-ph { font-size: 12px; color: #22c55e; text-decoration: none; font-family: 'DM Mono', monospace; display: block; margin-top: 4px; }
+    .shelter-km { font-size: 15px; font-weight: 700; color: var(--blue); font-family: 'DM Mono', monospace; white-space: nowrap; margin-left: 10px; }
+
+    /* ═══════════════════════════════════════════════════════
+       EMERGENCY PAGE
+    ═══════════════════════════════════════════════════════ */
+    .e-card { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+    .e-name { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .e-num  { font-size: 17px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--red); text-decoration: none; }
+    .safety { background: #fef2f2; border: 1.5px solid #fecaca; border-radius: var(--r); padding: 14px; }
+    .dark .safety { background: #2d0a0a; border-color: #7f1d1d; }
+    .safety-t { font-size: 12px; font-weight: 700; color: #991b1b; margin-bottom: 8px; }
+    .dark .safety-t { color: #fca5a5; }
+    .safety-li { list-style: none; }
+    .safety-li li { font-size: 12px; color: #7f1d1d; padding: 3px 0 3px 14px; position: relative; line-height: 1.5; }
+    .dark .safety-li li { color: #fca5a5; }
+    .safety-li li::before { content:'→'; position: absolute; left:0; opacity:.6; }
+
+    /* ── Shared misc ─────────────────────────────────────── */
+    .empty { text-align: center; color: var(--muted); padding: 32px 16px; font-size: 13px; }
+    .empty-ic { font-size: 32px; margin-bottom: 8px; }
+    .loader { display: flex; justify-content: center; padding: 32px; }
+    .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <span>🌊</span>
-    <h1>FloodWatch Kenya</h1>
-    <div class="live"><div class="dot"></div> LIVE</div>
+<div class="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-ico">🌊</div>
+    <div><div class="hdr-t">FloodWatch</div><div class="hdr-s">Kenya</div></div>
+    <div class="live"><div class="dot"></div>LIVE</div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('report')">📝 Report</button>
-    <button class="tab" onclick="showTab('alerts')">🚨 Alerts</button>
-    <button class="tab" onclick="showTab('shelters')">🏠 Shelters</button>
-    <button class="tab" onclick="showTab('emergency')">🆘 SOS</button>
+  <!-- ══════════════ REPORT PAGE (wizard) ══════════════ -->
+  <div id="page-report" class="page active">
+    <div class="wizard" id="wiz-body">
+      <!-- Step indicator -->
+      <div class="step-bar" id="step-bar">
+        <div class="step-dot current" id="sd-1">1</div>
+        <div class="step-line" id="sl-1"></div>
+        <div class="step-dot pending" id="sd-2">2</div>
+        <div class="step-line" id="sl-2"></div>
+        <div class="step-dot pending" id="sd-3">3</div>
+        <div class="step-line" id="sl-3"></div>
+        <div class="step-dot pending" id="sd-4">4</div>
+      </div>
+
+      <!-- Slides -->
+      <div class="slide-viewport">
+        <div class="slide-track" id="slide-track">
+
+          <!-- ── STEP 1: Location ─────────────────────── -->
+          <div class="slide" id="step1">
+            <div>
+              <div class="q-num">Step 1 of 4</div>
+              <div class="q-text">Where is the flood?</div>
+              <div class="q-sub">Mafuriko yako yako wapi?</div>
+            </div>
+
+            <!-- GPS option -->
+            <button class="gps-btn" id="gps-pick" onclick="getGPS()">
+              <div class="gps-btn-ic">📡</div>
+              <div>
+                <span class="gps-btn-t">Use my GPS location</span>
+                <span class="gps-btn-s">Tumia eneo langu la GPS</span>
+              </div>
+            </button>
+
+            <div class="divider"><div class="divider-line"></div><div class="divider-or">or type it</div><div class="divider-line"></div></div>
+
+            <div>
+              <label class="field-lbl">Location name / Mahali</label>
+              <input id="r-loc" type="text" placeholder="e.g. Kisumu CBD, Westlands…"/>
+            </div>
+
+            <div>
+              <label class="field-lbl">County / Kaunti</label>
+              <select id="r-county">
+                <option value="">Select county…</option>
+                <option>Nairobi</option><option>Mombasa</option><option>Kisumu</option>
+                <option>Nakuru</option><option>Eldoret</option><option>Kisii</option>
+                <option>Nyeri</option><option>Meru</option><option>Kakamega</option>
+                <option>Machakos</option><option>Kilifi</option><option>Garissa</option>
+                <option>Turkana</option><option>Mandera</option><option>Narok</option>
+                <option>Migori</option><option>Homa Bay</option><option>Siaya</option>
+                <option>Bungoma</option><option>Busia</option><option>Kajiado</option>
+                <option>Kiambu</option><option>Baringo</option><option>Kericho</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ── STEP 2: Severity ─────────────────────── -->
+          <div class="slide" id="step2">
+            <div>
+              <div class="q-num">Step 2 of 4</div>
+              <div class="q-text">How serious is it?</div>
+              <div class="q-sub">Hali ni mbaya kiasi gani?</div>
+            </div>
+
+            <button class="sev-option" data-sev="1" style="background:#f0fdf4;color:#166534" onclick="setSev(1)">
+              <div class="sev-num" style="background:#22c55e">1</div>
+              <div><span class="sev-title">Watch / Usalama</span><span class="sev-desc">Water rising slowly, no immediate danger</span></div>
+              <span class="sev-check">✓</span>
+            </button>
+
+            <button class="sev-option" data-sev="2" style="background:#fefce8;color:#854d0e" onclick="setSev(2)">
+              <div class="sev-num" style="background:#eab308">2</div>
+              <div><span class="sev-title">Moderate / Onyo</span><span class="sev-desc">Rising fast, area flooding</span></div>
+              <span class="sev-check">✓</span>
+            </button>
+
+            <button class="sev-option" data-sev="3" style="background:#fff7ed;color:#9a3412" onclick="setSev(3)">
+              <div class="sev-num" style="background:#f97316">3</div>
+              <div><span class="sev-title">Severe / Kali</span><span class="sev-desc">Roads blocked, homes flooded</span></div>
+              <span class="sev-check">✓</span>
+            </button>
+
+            <button class="sev-option" data-sev="4" style="background:#fef2f2;color:#991b1b" onclick="setSev(4)">
+              <div class="sev-num" style="background:#ef4444">4</div>
+              <div><span class="sev-title">Critical / Hatari Sana</span><span class="sev-desc">People at risk, need evacuation</span></div>
+              <span class="sev-check">✓</span>
+            </button>
+
+            <button class="sev-option" data-sev="5" style="background:#450a0a;color:#fca5a5" onclick="setSev(5)">
+              <div class="sev-num" style="background:#7f1d1d">5</div>
+              <div><span class="sev-title">Emergency / Dharura</span><span class="sev-desc">People trapped, immediate rescue needed</span></div>
+              <span class="sev-check">✓</span>
+            </button>
+          </div>
+
+          <!-- ── STEP 3: Water Level ───────────────────── -->
+          <div class="slide" id="step3">
+            <div>
+              <div class="q-num">Step 3 of 4</div>
+              <div class="q-text">How high is the water?</div>
+              <div class="q-sub">Maji yanafikia wapi?</div>
+            </div>
+
+            <div class="wl-grid">
+              <button class="wl-btn" data-wl="ankle" onclick="setWL('ankle')">
+                <div class="wl-ico">🦶</div>
+                <div class="wl-label">Ankle</div>
+                <div class="wl-sw">Kifundo</div>
+              </button>
+              <button class="wl-btn" data-wl="knee" onclick="setWL('knee')">
+                <div class="wl-ico">🦵</div>
+                <div class="wl-label">Knee</div>
+                <div class="wl-sw">Magoti</div>
+              </button>
+              <button class="wl-btn" data-wl="waist" onclick="setWL('waist')">
+                <div class="wl-ico">⬆️</div>
+                <div class="wl-label">Waist</div>
+                <div class="wl-sw">Kiuno</div>
+              </button>
+              <button class="wl-btn" data-wl="shoulder" onclick="setWL('shoulder')">
+                <div class="wl-ico">💪</div>
+                <div class="wl-label">Shoulder</div>
+                <div class="wl-sw">Bega</div>
+              </button>
+              <button class="wl-btn" data-wl="head" onclick="setWL('head')" style="grid-column:1/-1;border-color:#ef4444;background:#fef2f2">
+                <div class="wl-ico">🚨</div>
+                <div class="wl-label" style="color:#991b1b">Head level — CRITICAL</div>
+                <div class="wl-sw" style="color:#b91c1c">Kichwa — HATARI</div>
+              </button>
+            </div>
+            <button class="skip-btn" onclick="setWL(null)">Skip — Not sure / Ruka — Sijui</button>
+          </div>
+
+          <!-- ── STEP 4: Confirm ───────────────────────── -->
+          <div class="slide" id="step4">
+            <div>
+              <div class="q-num">Step 4 of 4</div>
+              <div class="q-text">Confirm your report</div>
+              <div class="q-sub">Thibitisha ripoti yako</div>
+            </div>
+
+            <!-- Summary -->
+            <div class="summary-card" id="summary-card">
+              <div class="summary-row">
+                <span class="summary-k">Location</span>
+                <span class="summary-v" id="sum-loc">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-k">Severity</span>
+                <span class="summary-v" id="sum-sev">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-k">Water Level</span>
+                <span class="summary-v" id="sum-wl">Not specified</span>
+              </div>
+            </div>
+
+            <!-- Rescue toggle -->
+            <button class="rescue-row2" id="rescue-toggle" onclick="toggleRescue()">
+              <div class="rescue-row2-ic">🆘</div>
+              <div>
+                <span class="rescue-row2-t">People need rescue</span>
+                <span class="rescue-row2-s">Watu wanahitaji uokoaji wa haraka</span>
+              </div>
+              <div class="rescue-toggle-ico" id="rescue-ico">✓</div>
+            </button>
+
+            <!-- Optional description -->
+            <div>
+              <label class="field-lbl" style="margin-bottom:6px;display:block">Additional details (optional)</label>
+              <textarea id="r-desc" rows="2" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--text);font-family:inherit;outline:none;resize:none;transition:border-color .15s" placeholder="Any extra info in English or Kiswahili…" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            </div>
+          </div>
+
+        </div><!-- /slide-track -->
+      </div><!-- /slide-viewport -->
+
+      <!-- Wizard navigation buttons -->
+      <div class="w-nav" id="w-nav">
+        <button class="btn-back" id="btn-back" onclick="prevStep()" style="display:none">← Back</button>
+        <button class="btn-next" id="btn-next" onclick="nextStep()">Next Step →</button>
+        <button class="btn-submit" id="btn-submit" onclick="submitReport()" style="display:none">🌊 Submit Report</button>
+      </div>
+    </div><!-- /wizard -->
+
+    <!-- Success screen -->
+    <div class="success" id="wiz-success">
+      <div class="success-ic">✅</div>
+      <div class="success-t">Report Submitted!</div>
+      <div class="success-s">Ripoti imehifadhiwa.<br/>Stay safe — move to higher ground!<br/>Nenda mahali pa juu haraka!</div>
+      <div class="sos-tel">📞 0800 723 000</div>
+      <button class="btn-reset" onclick="resetWizard()">Report Another / Nyingine</button>
+    </div>
+  </div><!-- /page-report -->
+
+  <!-- ══════════════ ALERTS PAGE ══════════════ -->
+  <div id="page-alerts" class="page">
+    <div class="page-pad">
+      <p class="sec-title">Active Flood Alerts · Arifa za Sasa</p>
+      <div id="alerts-loader" class="loader"><div class="spinner"></div></div>
+      <div id="alerts-list"></div>
+    </div>
   </div>
 
-  <!-- ── REPORT TAB ──────────────────────────────── -->
-  <div id="tab-report" class="content">
-    <div id="report-form">
-      <div class="form-group">
-        <label>📍 Location / Mahali</label>
-        <input id="r-location" type="text" placeholder="e.g. Kisumu CBD, Westlands Nairobi"/>
-        <button class="loc-btn" style="margin-top:8px" onclick="getLocation()">
-          📡 Use my GPS location / Tumia GPS yangu
-        </button>
+  <!-- ══════════════ SHELTERS PAGE ══════════════ -->
+  <div id="page-shelters" class="page">
+    <div class="page-pad">
+      <p class="sec-title">Find Shelters · Pata Makazi</p>
+      <button class="gps-btn2" onclick="findShelters()">📡 Find shelters near me / Karibu nawe</button>
+      <div id="shelters-loader" class="loader" style="display:none"><div class="spinner"></div></div>
+      <div id="shelters-list"></div>
+      <div class="e-card" style="margin-top:4px">
+        <div><div class="e-name" style="color:#991b1b">🆘 Kenya Red Cross</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Toll-free · 24/7</div></div>
+        <a href="tel:0800723000" class="e-num" style="font-size:15px">0800 723 000</a>
       </div>
-      <div class="form-group">
-        <label>🏙️ County / Kaunti</label>
-        <select id="r-county">
-          <option value="">Select county / Chagua kaunti...</option>
-          <option>Nairobi</option><option>Mombasa</option><option>Kisumu</option>
-          <option>Nakuru</option><option>Eldoret</option><option>Kisii</option>
-          <option>Nyeri</option><option>Meru</option><option>Kakamega</option>
-          <option>Machakos</option><option>Kilifi</option><option>Garissa</option>
-          <option>Turkana</option><option>Mandera</option><option>Narok</option>
-          <option>Migori</option><option>Homa Bay</option><option>Siaya</option>
-          <option>Bungoma</option><option>Busia</option><option>Kajiado</option>
-          <option>Kiambu</option><option>Baringo</option><option>Kericho</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>⚠️ Severity / Kiwango cha Hatari</label>
-        <div class="sev-grid">
-          <button class="sev-btn" data-n="1" onclick="setSev(1)">1</button>
-          <button class="sev-btn active" data-n="2" onclick="setSev(2)">2</button>
-          <button class="sev-btn" data-n="3" onclick="setSev(3)">3</button>
-          <button class="sev-btn" data-n="4" onclick="setSev(4)">4</button>
-          <button class="sev-btn" data-n="5" onclick="setSev(5)">5</button>
-        </div>
-        <p id="sev-label" style="font-size:12px;color:#6b7280;margin-top:6px">2 — Moderate / Onyo</p>
-      </div>
-      <div class="form-group">
-        <label>💧 Water Level / Kiwango cha Maji</label>
-        <select id="r-waterlevel">
-          <option value="">Not sure / Sijui</option>
-          <option value="ankle">Ankle / Kifundo</option>
-          <option value="knee">Knee / Magoti</option>
-          <option value="waist">Waist / Kiuno</option>
-          <option value="shoulder">Shoulder / Bega</option>
-          <option value="head">Head level — CRITICAL / Kichwa — HATARI</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="rescue-toggle">
-          <input type="checkbox" id="r-rescue"/>
-          <span>🆘 People need rescue / Watu wanahitaji uokoaji</span>
-        </label>
-      </div>
-      <div class="form-group">
-        <label>📝 Description / Maelezo (optional)</label>
-        <textarea id="r-desc" rows="3" placeholder="Describe the situation in English or Kiswahili..."></textarea>
-      </div>
-      <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">
-        🌊 Submit Report / Tuma Ripoti
-      </button>
-    </div>
-    <div class="success-box" id="success-box">
-      <div class="icon">✅</div>
-      <h2>Report Submitted!</h2>
-      <p>Ripoti imehifadhiwa.<br/>Stay safe — move to higher ground!</p>
-      <p style="margin-top:8px;font-size:13px;color:#dc2626">📞 Red Cross: <strong>0800 723 000</strong></p>
-      <button class="btn btn-outline" style="margin-top:16px" onclick="resetForm()">Report Another / Toa Nyingine</button>
     </div>
   </div>
 
-  <!-- ── ALERTS TAB ──────────────────────────────── -->
-  <div id="tab-alerts" class="content hidden">
-    <div id="alerts-loader" class="loader"><div class="spinner"></div></div>
-    <div id="alerts-list"></div>
+  <!-- ══════════════ EMERGENCY PAGE ══════════════ -->
+  <div id="page-emergency" class="page">
+    <div class="page-pad">
+      <p class="sec-title">Emergency Contacts · Dharura</p>
+      <div class="e-card"><div><div class="e-name">🔴 Kenya Red Cross</div><div style="font-size:10px;color:var(--muted)">Bure / Toll-free</div></div><a href="tel:0800723000" class="e-num">0800 723 000</a></div>
+      <div class="e-card"><div class="e-name">🚨 Kenya Police</div><a href="tel:999" class="e-num">999 / 112</a></div>
+      <div class="e-card"><div class="e-name">🏥 Medical Emergency</div><a href="tel:0800720021" class="e-num">0800 720 021</a></div>
+      <div class="e-card"><div class="e-name">🌊 NDMA Disasters</div><a href="tel:+254202737985" class="e-num">+254 20 2737985</a></div>
+      <div class="e-card"><div class="e-name">🌦 Met Department</div><a href="tel:+254203867880" class="e-num">+254 20 3867880</a></div>
+      <div class="safety">
+        <div class="safety-t">⬆️ Flood Safety / Usalama wa Mafuriko</div>
+        <ul class="safety-li">
+          <li>Move to higher ground immediately</li>
+          <li>Enda mahali pa juu mara moja</li>
+          <li>Do not walk in moving floodwater</li>
+          <li>Usitembee kwenye maji yanayotiririka</li>
+          <li>Stay away from drains and streams</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
-  <!-- ── SHELTERS TAB ────────────────────────────── -->
-  <div id="tab-shelters" class="content hidden">
-    <button class="loc-btn" onclick="findShelters()">
-      📡 Find shelters near me / Tafuta makazi karibu
-    </button>
-    <div id="shelters-loader" class="loader hidden"><div class="spinner"></div></div>
-    <div id="shelters-list"></div>
-  </div>
-
-  <!-- ── EMERGENCY TAB ───────────────────────────── -->
-  <div id="tab-emergency" class="content hidden">
-    <div class="emergency-card">
-      <div><div class="name">🔴 Kenya Red Cross</div><div style="font-size:11px;color:#6b7280">Toll-free • Bure</div></div>
-      <a href="tel:0800723000" class="num">0800 723 000</a>
-    </div>
-    <div class="emergency-card">
-      <div><div class="name">🚨 Kenya Police</div></div>
-      <a href="tel:999" class="num">999 / 112</a>
-    </div>
-    <div class="emergency-card">
-      <div><div class="name">🏥 Medical Emergency</div></div>
-      <a href="tel:0800720021" class="num">0800 720 021</a>
-    </div>
-    <div class="emergency-card">
-      <div><div class="name">🌊 NDMA Disasters</div></div>
-      <a href="tel:+254202737985" class="num">+254 20 2737985</a>
-    </div>
-    <div class="emergency-card">
-      <div><div class="name">🌦 Meteorological Dept</div></div>
-      <a href="tel:+254203867880" class="num">+254 20 3867880</a>
-    </div>
-    <div style="margin-top:20px;padding:14px;background:#fef2f2;border-radius:10px;border:1.5px solid #fecaca">
-      <p style="font-size:13px;color:#991b1b;font-weight:600;margin-bottom:6px">⬆️ Flood Safety / Usalama wa Mafuriko</p>
-      <ul style="font-size:12px;color:#7f1d1d;padding-left:18px;line-height:1.8">
-        <li>Move to higher ground immediately</li>
-        <li>Enda mahali pa juu haraka</li>
-        <li>Do not walk in moving floodwater</li>
-        <li>Usitembee kwenye maji yanayotiririka</li>
-        <li>Stay away from drains and streams</li>
-      </ul>
-    </div>
-  </div>
+  <!-- Bottom nav -->
+  <nav class="nav">
+    <button class="nb active" id="nb-report"   onclick="switchPage('report')">  <span class="nb-ic">📝</span><span class="nb-lb">Report</span>   </button>
+    <button class="nb"        id="nb-alerts"   onclick="switchPage('alerts')">  <span class="nb-ic">🚨</span><span class="nb-lb">Alerts</span>   </button>
+    <button class="nb"        id="nb-shelters" onclick="switchPage('shelters')"><span class="nb-ic">🏠</span><span class="nb-lb">Shelters</span> </button>
+    <button class="nb"        id="nb-emergency"onclick="switchPage('emergency')"><span class="nb-ic">🆘</span><span class="nb-lb">SOS</span>    </button>
+  </nav>
+</div><!-- /app -->
 
 <script>
-  // ── Telegram WebApp init ──────────────────────────────────────
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    if (tg.colorScheme === 'dark') document.body.classList.add('dark');
+// ── Telegram init ────────────────────────────────────────────
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready(); tg.expand();
+  if (tg.colorScheme === 'dark') document.documentElement.classList.add('dark');
+  tg.onEvent('themeChanged', () => {
+    document.documentElement.classList.toggle('dark', tg.colorScheme === 'dark');
+  });
+}
+
+const API = window.location.origin;
+
+// ── Nav ──────────────────────────────────────────────────────
+function switchPage(name) {
+  ['report','alerts','shelters','emergency'].forEach(p => {
+    document.getElementById('page-' + p).classList.remove('active');
+    document.getElementById('nb-' + p).classList.remove('active');
+  });
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nb-' + name).classList.add('active');
+  if (name === 'alerts') loadAlerts();
+}
+
+// ═════════════════════════════════════════════════════════════
+//  WIZARD STATE
+// ═════════════════════════════════════════════════════════════
+let step = 1;
+const state = { lat: null, lng: null, loc: '', county: '', sev: null, wl: null, rescue: false };
+
+const SEV_LABELS = { 1:'Watch',2:'Moderate',3:'Severe',4:'Critical',5:'Emergency' };
+const WL_LABELS  = { ankle:'Ankle',knee:'Knee',waist:'Waist',shoulder:'Shoulder',head:'Head — CRITICAL' };
+const SEV_COLORS = { 1:'#22c55e',2:'#eab308',3:'#f97316',4:'#ef4444',5:'#7f1d1d' };
+
+function gotoStep(n) {
+  step = n;
+  // Move slider
+  document.getElementById('slide-track').style.transform = `translateX(-${(n-1)*25}%)`;
+  // Update step dots
+  for (let i = 1; i <= 4; i++) {
+    const d = document.getElementById('sd-' + i);
+    d.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'current' : 'pending');
+    if (i < 4) {
+      const l = document.getElementById('sl-' + i);
+      l.className = 'step-line' + (i < n ? ' done' : '');
+    }
   }
+  // Show/hide nav buttons
+  const back   = document.getElementById('btn-back');
+  const next   = document.getElementById('btn-next');
+  const submit = document.getElementById('btn-submit');
+  back.style.display   = n > 1 ? 'flex' : 'none';
+  next.style.display   = n < 4 ? 'flex' : 'none';
+  submit.style.display = n === 4 ? 'flex' : 'none';
+  if (n === 4) updateSummary();
+}
 
-  // Relative URL — works automatically on both localhost and Render production
-  const API = window.location.origin;
+function nextStep() {
+  if (step === 1) {
+    state.loc    = document.getElementById('r-loc').value.trim();
+    state.county = document.getElementById('r-county').value;
+  }
+  if (step === 2 && !state.sev) {
+    // highlight all options to hint user
+    document.querySelectorAll('.sev-option').forEach(b => b.style.outline = '2px solid #ef4444');
+    setTimeout(() => document.querySelectorAll('.sev-option').forEach(b => b.style.outline = ''), 800);
+    return;
+  }
+  if (step < 4) gotoStep(step + 1);
+}
 
-  let selectedSev = 2;
-  let reportLat = null, reportLng = null;
+function prevStep() { if (step > 1) gotoStep(step - 1); }
 
-  const SEV_LABELS = {
-    1:'1 — Watch / Usalama', 2:'2 — Moderate / Onyo',
-    3:'3 — Severe / Kali', 4:'4 — Critical / Hatari Sana',
-    5:'5 — Emergency / Dharura'
+// ── Step 1 — GPS ─────────────────────────────────────────────
+function getGPS() {
+  const btn = document.getElementById('gps-pick');
+  btn.style.opacity = '.6';
+  const done = (lat, lng) => {
+    state.lat = lat; state.lng = lng;
+    const locStr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    document.getElementById('r-loc').value = locStr;
+    state.loc = locStr;
+    btn.style.opacity = '1';
+    btn.querySelector('.gps-btn-t').textContent = '✅ GPS location captured';
+    btn.querySelector('.gps-btn-s').textContent = locStr;
+    tg?.HapticFeedback?.notificationOccurred('success');
+  };
+  if (tg?.LocationManager?.isAccessGranted) {
+    tg.LocationManager.getLocation(loc => { if (loc) done(loc.latitude, loc.longitude); });
+  } else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      p => done(p.coords.latitude, p.coords.longitude),
+      () => { btn.style.opacity = '1'; alert('GPS denied. Please type location.'); }
+    );
+  }
+}
+
+// ── Step 2 — Severity ────────────────────────────────────────
+function setSev(n) {
+  state.sev = n;
+  document.querySelectorAll('.sev-option').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.sev) === n);
+  });
+  tg?.HapticFeedback?.selectionChanged();
+  // Auto advance after short delay
+  setTimeout(() => nextStep(), 220);
+}
+
+// ── Step 3 — Water level ─────────────────────────────────────
+function setWL(val) {
+  state.wl = val;
+  document.querySelectorAll('.wl-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.wl === val);
+  });
+  tg?.HapticFeedback?.selectionChanged();
+  setTimeout(() => nextStep(), 220);
+}
+
+// ── Step 4 — Summary / Rescue ────────────────────────────────
+function updateSummary() {
+  const locText = state.loc || state.county || 'Not specified';
+  const sevText = state.sev ? `${state.sev} — ${SEV_LABELS[state.sev]}` : 'Not selected';
+  const wlText  = state.wl ? WL_LABELS[state.wl] : 'Not specified';
+  document.getElementById('sum-loc').textContent = locText;
+  document.getElementById('sum-sev').textContent = sevText;
+  document.getElementById('sum-wl').textContent  = wlText;
+  const sev = document.getElementById('sum-sev');
+  sev.style.color = state.sev ? SEV_COLORS[state.sev] : 'var(--text)';
+  // auto-check rescue if sev 5
+  if (state.sev === 5 && !state.rescue) toggleRescue();
+}
+
+function toggleRescue() {
+  state.rescue = !state.rescue;
+  const btn = document.getElementById('rescue-toggle');
+  const ico = document.getElementById('rescue-ico');
+  btn.classList.toggle('on', state.rescue);
+  ico.textContent = state.rescue ? '✓' : '✓';
+  ico.style.color = state.rescue ? 'white' : 'var(--muted)';
+}
+
+// ── Submit ───────────────────────────────────────────────────
+async function submitReport() {
+  if (!state.sev) { alert('Please select severity first.'); gotoStep(2); return; }
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true; btn.textContent = '⏳ Saving…';
+
+  const payload = {
+    source:       'telegram_miniapp',
+    language:     'en',
+    location:     state.loc     || undefined,
+    county:       state.county  || undefined,
+    severity:     state.sev,
+    water_level:  state.wl      || undefined,
+    needs_rescue: state.rescue,
+    raw_message:  document.getElementById('r-desc').value.trim() || undefined,
+    lat:          state.lat,
+    lng:          state.lng,
   };
 
-  // ── Tabs ──────────────────────────────────────────────────────
-  function showTab(name) {
-    ['report','alerts','shelters','emergency'].forEach(t => {
-      document.getElementById('tab-'+t).classList.add('hidden');
-      document.querySelectorAll('.tab')[['report','alerts','shelters','emergency'].indexOf(t)].classList.remove('active');
+  try {
+    const res = await fetch(`${API}/reports/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
-    document.getElementById('tab-'+name).classList.remove('hidden');
-    event.currentTarget.classList.add('active');
-    if (name === 'alerts') loadAlerts();
+    if (!res.ok) throw new Error();
+    document.getElementById('wiz-body').style.display    = 'none';
+    document.getElementById('wiz-success').classList.add('show');
+    tg?.HapticFeedback?.notificationOccurred('success');
+  } catch {
+    btn.disabled = false; btn.textContent = '🌊 Submit Report';
+    alert('Failed to submit. Check your connection.\nImeshindwa. Angalia muunganisho wako.');
   }
+}
 
-  // ── Severity ──────────────────────────────────────────────────
-  function setSev(n) {
-    selectedSev = n;
-    document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.sev-btn[data-n="${n}"]`).classList.add('active');
-    document.getElementById('sev-label').textContent = SEV_LABELS[n];
+function resetWizard() {
+  state.lat=null; state.lng=null; state.loc=''; state.county='';
+  state.sev=null; state.wl=null; state.rescue=false;
+  document.getElementById('r-loc').value = '';
+  document.getElementById('r-county').value = '';
+  document.getElementById('r-desc').value = '';
+  document.getElementById('gps-pick').style.opacity = '1';
+  document.getElementById('gps-pick').querySelector('.gps-btn-t').textContent = 'Use my GPS location';
+  document.getElementById('gps-pick').querySelector('.gps-btn-s').textContent = 'Tumia eneo langu la GPS';
+  document.querySelectorAll('.sev-option').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.wl-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('rescue-toggle').classList.remove('on');
+  document.getElementById('rescue-ico').textContent = '✓';
+  document.getElementById('rescue-ico').style.color = 'var(--muted)';
+  document.getElementById('btn-submit').disabled = false;
+  document.getElementById('btn-submit').textContent = '🌊 Submit Report';
+  document.getElementById('wiz-body').style.display = '';
+  document.getElementById('wiz-success').classList.remove('show');
+  gotoStep(1);
+}
+
+// ═════════════════════════════════════════════════════════════
+//  ALERTS
+// ═════════════════════════════════════════════════════════════
+const SEV_COLS = { 1:'#22c55e',2:'#eab308',3:'#f97316',4:'#ef4444',5:'#7f1d1d' };
+const SEV_NAMES = { 1:'Watch',2:'Moderate',3:'Severe',4:'Critical',5:'Emergency' };
+
+async function loadAlerts() {
+  const loader = document.getElementById('alerts-loader');
+  const list   = document.getElementById('alerts-list');
+  loader.style.display = 'flex'; list.innerHTML = '';
+  try {
+    const res = await fetch(`${API}/reports/?hours=6&severity_min=2&limit=20`);
+    const data = await res.json();
+    loader.style.display = 'none';
+    if (!data.length) { list.innerHTML = `<div class="empty"><div class="empty-ic">✅</div>No active alerts in the last 6 hours</div>`; return; }
+    data.forEach(r => {
+      const chip = `<span class="chip" style="background:${SEV_COLS[r.severity]}">${SEV_NAMES[r.severity]||r.severity}</span>`;
+      const sos  = r.needs_rescue ? `<span class="chip sos-chip">🆘 RESCUE</span>` : '';
+      const veri = r.verified ? `<span style="font-size:10px;color:#22c55e;font-weight:700">✓ verified</span>` : '';
+      list.innerHTML += `
+        <div class="alert-card s${r.severity}">
+          <div class="alert-hdr">${chip}${sos}${veri}</div>
+          <div class="alert-loc">📍 ${r.location||r.county||'Kenya'}</div>
+          ${r.water_level ? `<div class="alert-sub">💧 ${r.water_level}</div>` : ''}
+          ${r.raw_message ? `<div class="alert-sub">"${r.raw_message.slice(0,80)}"</div>` : ''}
+          <div class="alert-ft">${timeAgo(r.created_at)} · ${r.source}</div>
+        </div>`;
+    });
+  } catch {
+    loader.style.display = 'none';
+    list.innerHTML = `<div class="empty"><div class="empty-ic">❌</div>Could not load alerts</div>`;
   }
+}
 
-  // ── GPS ────────────────────────────────────────────────────────
-  function getLocation() {
-    if (tg?.LocationManager) {
-      tg.LocationManager.getLocation(loc => {
-        if (loc) {
-          reportLat = loc.latitude;
-          reportLng = loc.longitude;
-          document.getElementById('r-location').value = `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
-        }
-      });
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          reportLat = pos.coords.latitude;
-          reportLng = pos.coords.longitude;
-          document.getElementById('r-location').value = `${reportLat.toFixed(4)}, ${reportLng.toFixed(4)}`;
-        },
-        () => alert('Could not get location. Please type it manually.')
-      );
-    }
-  }
+// ═════════════════════════════════════════════════════════════
+//  SHELTERS
+// ═════════════════════════════════════════════════════════════
+async function findShelters() {
+  const loader = document.getElementById('shelters-loader');
+  const list   = document.getElementById('shelters-list');
+  loader.style.display = 'flex'; list.innerHTML = '';
+  const icons = { hospital:'🏥',school:'🏫',church:'⛪',camp:'⛺',shelter:'🏠' };
 
-  // ── Submit Report ─────────────────────────────────────────────
-  async function submitReport() {
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Saving...';
-
-    const payload = {
-      source:       'telegram_miniapp',
-      language:     'en',
-      location:     document.getElementById('r-location').value || undefined,
-      county:       document.getElementById('r-county').value || undefined,
-      severity:     selectedSev,
-      water_level:  document.getElementById('r-waterlevel').value || undefined,
-      needs_rescue: document.getElementById('r-rescue').checked,
-      raw_message:  document.getElementById('r-desc').value || undefined,
-      lat:          reportLat,
-      lng:          reportLng,
-    };
-
+  const got = async (lat,lng) => {
     try {
-      const res = await fetch(`${API}/reports/`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error();
-      document.getElementById('report-form').style.display = 'none';
-      document.getElementById('success-box').style.display = 'block';
-      if (tg) tg.HapticFeedback?.notificationOccurred('success');
-    } catch {
-      alert('Failed to submit. Please try again.\nImeshindwa. Jaribu tena.');
-      btn.disabled = false;
-      btn.textContent = '🌊 Submit Report / Tuma Ripoti';
-    }
-  }
-
-  function resetForm() {
-    document.getElementById('report-form').style.display = 'block';
-    document.getElementById('success-box').style.display = 'none';
-    document.getElementById('r-location').value = '';
-    document.getElementById('r-county').value = '';
-    document.getElementById('r-desc').value = '';
-    document.getElementById('r-rescue').checked = false;
-    document.getElementById('r-waterlevel').value = '';
-    setSev(2);
-    reportLat = null; reportLng = null;
-  }
-
-  // ── Load Alerts ───────────────────────────────────────────────
-  async function loadAlerts() {
-    const loader = document.getElementById('alerts-loader');
-    const list   = document.getElementById('alerts-list');
-    loader.classList.remove('hidden');
-    list.innerHTML = '';
-
-    try {
-      const res = await fetch(`${API}/reports/?hours=6&severity_min=2&limit=20`);
-      const reports = await res.json();
-      loader.classList.add('hidden');
-
-      if (!reports.length) {
-        list.innerHTML = '<div class="empty">✅ No active flood alerts in the last 6 hours.</div>';
-        return;
-      }
-
-      const SEV_NAMES = {1:'Watch',2:'Moderate',3:'Severe',4:'Critical',5:'Emergency'};
-      reports.forEach(r => {
-        const ago = timeAgo(r.created_at);
-        list.innerHTML += `
-          <div class="alert-card ${r.needs_rescue?'rescue':''}">
-            <div class="alert-top">
-              <span class="sev-badge sev-${r.severity}">${SEV_NAMES[r.severity]||r.severity}</span>
-              ${r.needs_rescue ? '<span class="rescue-badge">🆘 RESCUE</span>' : ''}
-              ${r.verified ? '<span style="color:#16a34a;font-size:11px">✓ verified</span>' : ''}
-            </div>
-            <div class="alert-loc">📍 ${r.location || r.county || 'Kenya'}</div>
-            ${r.water_level ? `<div class="alert-msg">💧 ${r.water_level}</div>` : ''}
-            ${r.raw_message ? `<div class="alert-msg">"${r.raw_message.slice(0,80)}"</div>` : ''}
-            <div class="alert-time">🕐 ${ago} · ${r.source}</div>
-          </div>`;
+      const res = await fetch(`${API}/shelters/nearby?lat=${lat}&lng=${lng}&limit=5`);
+      const data = await res.json();
+      loader.style.display = 'none';
+      if (!data.length) { list.innerHTML=`<div class="empty"><div class="empty-ic">🏠</div>No shelters nearby.<br/>Call Red Cross: 0800 723 000</div>`; return; }
+      data.forEach(s => {
+        list.innerHTML += `<div class="shelter-card">
+          <div><div class="shelter-nm">${icons[s.type]||'🏠'} ${s.name}</div><div class="shelter-tp">${s.type}${s.capacity?` · ${s.capacity} people`:''}</div>${s.contact?`<a href="tel:${s.contact}" class="shelter-ph">📞 ${s.contact}</a>`:''}</div>
+          <div class="shelter-km">${s.distance_km}km</div></div>`;
       });
     } catch {
-      loader.classList.add('hidden');
-      list.innerHTML = '<div class="empty">❌ Could not load alerts. Check your connection.</div>';
+      loader.style.display = 'none';
+      list.innerHTML = `<div class="empty">❌ Error loading shelters</div>`;
     }
+  };
+
+  if (tg?.LocationManager?.isAccessGranted) {
+    tg.LocationManager.getLocation(loc => { if(loc) got(loc.latitude,loc.longitude); else {loader.style.display='none';list.innerHTML='<div class="empty">Could not get location</div>';} });
+  } else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      p => got(p.coords.latitude, p.coords.longitude),
+      () => { loader.style.display='none'; list.innerHTML='<div class="empty">GPS access denied</div>'; }
+    );
   }
+}
 
-  // ── Find Shelters ─────────────────────────────────────────────
-  function findShelters() {
-    const loader = document.getElementById('shelters-loader');
-    const list   = document.getElementById('shelters-list');
-    loader.classList.remove('hidden');
-    list.innerHTML = '';
-
-    const gotCoords = async (lat, lng) => {
-      try {
-        const res = await fetch(`${API}/shelters/nearby?lat=${lat}&lng=${lng}&limit=5`);
-        const shelters = await res.json();
-        loader.classList.add('hidden');
-
-        if (!shelters.length) {
-          list.innerHTML = '<div class="empty">No shelters recorded nearby.<br/>📞 Call Red Cross: 0800 723 000</div>';
-          return;
-        }
-
-        shelters.forEach(s => {
-          list.innerHTML += `
-            <div class="shelter-card">
-              <div>
-                <div class="shelter-name">${s.name}</div>
-                <div class="shelter-info">${s.type}${s.capacity?` · ${s.capacity} people`:''}</div>
-                ${s.contact ? `<a href="tel:${s.contact}" class="shelter-phone">📞 ${s.contact}</a>` : ''}
-              </div>
-              <div class="shelter-dist">${s.distance_km} km</div>
-            </div>`;
-        });
-      } catch {
-        loader.classList.add('hidden');
-        list.innerHTML = '<div class="empty">❌ Error loading shelters.</div>';
-      }
-    };
-
-    if (tg?.LocationManager) {
-      tg.LocationManager.getLocation(loc => {
-        if (loc) gotCoords(loc.latitude, loc.longitude);
-        else { loader.classList.add('hidden'); list.innerHTML = '<div class="empty">Could not get location.</div>'; }
-      });
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => gotCoords(pos.coords.latitude, pos.coords.longitude),
-        () => { loader.classList.add('hidden'); list.innerHTML = '<div class="empty">Location access denied. Please enable GPS.</div>'; }
-      );
-    }
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────
-  function timeAgo(ts) {
-    const s = Math.round((Date.now() - new Date(ts)) / 1000);
-    if (s < 60)  return `${s}s ago`;
-    if (s < 3600) return `${Math.round(s/60)}m ago`;
-    return `${Math.round(s/3600)}h ago`;
-  }
+// ── Helpers ──────────────────────────────────────────────────
+function timeAgo(ts) {
+  const s = Math.round((Date.now() - new Date(ts)) / 1000);
+  if (s < 60)   return `${s}s ago`;
+  if (s < 3600) return `${Math.round(s/60)}m ago`;
+  return `${Math.round(s/3600)}h ago`;
+}
 </script>
 </body>
 </html>
