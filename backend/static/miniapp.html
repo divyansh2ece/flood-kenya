@@ -292,9 +292,9 @@
             </div>
 
             <div>
-              <label class="field-lbl">County / Kaunti</label>
+              <label class="field-lbl">District / Wilaya</label>
               <select id="r-county">
-                <option value="">Select county…</option>
+                <option value="">Select district…</option>
                 <option>Nairobi</option><option>Mombasa</option><option>Kisumu</option>
                 <option>Nakuru</option><option>Eldoret</option><option>Kisii</option>
                 <option>Nyeri</option><option>Meru</option><option>Kakamega</option>
@@ -511,7 +511,12 @@ if (tg) {
   });
 }
 
-const API = window.location.origin;
+// Telegram's webview can sandbox the iframe and return "null" for window.location.origin.
+// Hardcode the production URL; fall back to origin only for local development.
+const _origin = window.location.origin;
+const API = (_origin && _origin !== 'null' && !_origin.startsWith('file'))
+  ? _origin
+  : 'https://flood-kenya.onrender.com';
 
 // ── Nav ──────────────────────────────────────────────────────
 function switchPage(name) {
@@ -719,7 +724,7 @@ async function loadAlerts() {
       list.innerHTML += `
         <div class="alert-card s${r.severity}">
           <div class="alert-hdr">${chip}${sos}${veri}</div>
-          <div class="alert-loc">📍 ${r.location||r.county||'Kenya'}</div>
+          <div class="alert-loc">📍 ${r.location||r.county||'Unknown location'}</div>
           ${r.water_level ? `<div class="alert-sub">💧 ${r.water_level}</div>` : ''}
           ${r.raw_message ? `<div class="alert-sub">"${r.raw_message.slice(0,80)}"</div>` : ''}
           <div class="alert-ft">${timeAgo(r.created_at)} · ${r.source}</div>

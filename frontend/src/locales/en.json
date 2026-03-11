@@ -51,7 +51,7 @@
       "high":     "High",
       "unknown":  "Unknown"
     },
-    "selectCounty": "Select a county..."
+    "selectCounty": "Select a district..."
   },
 
   "shelters": {
@@ -66,7 +66,7 @@
     "button":       "Report Flood",
     "title":        "Submit Flood Report",
     "location":     "Location / Area",
-    "county":       "County",
+    "county":       "District",
     "severity":     "Severity",
     "waterLevel":   "Water Level",
     "waterLevels": {
@@ -86,7 +86,7 @@
     "success":      "Report submitted. Stay safe!",
     "error":        "Failed to submit. Please try again.",
     "cancel":       "Cancel",
-    "selectCounty": "Select county...",
+    "selectCounty": "Select district...",
     "severityLabels": {
       "1": "1 - Watch",
       "2": "2 - Moderate",

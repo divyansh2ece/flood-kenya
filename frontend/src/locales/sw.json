@@ -51,7 +51,7 @@
       "high":     "Juu",
       "unknown":  "Haijulikani"
     },
-    "selectCounty": "Chagua kaunti..."
+    "selectCounty": "Chagua wilaya..."
   },
 
   "shelters": {
@@ -66,7 +66,7 @@
     "button":       "Toa Taarifa",
     "title":        "Tuma Ripoti ya Mafuriko",
     "location":     "Mahali / Eneo",
-    "county":       "Kaunti",
+    "county":       "Wilaya",
     "severity":     "Kiwango cha Hatari",
     "waterLevel":   "Kiwango cha Maji",
     "waterLevels": {
@@ -86,7 +86,7 @@
     "success":      "Ripoti imetumwa. Kaa salama!",
     "error":        "Imeshindwa kutuma. Jaribu tena.",
     "cancel":       "Ghairi",
-    "selectCounty": "Chagua kaunti...",
+    "selectCounty": "Chagua wilaya...",
     "severityLabels": {
       "1": "1 - Usalama",
       "2": "2 - Onyo",

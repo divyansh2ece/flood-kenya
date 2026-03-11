@@ -42,7 +42,7 @@ allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://loc
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],   # open for Mini App + NGO access
-    allow_credentials=True,
+    allow_credentials=False,  # must be False when allow_origins=["*"] — CORS spec forbids credentials with wildcard
     allow_methods=["*"],
     allow_headers=["*"],
 )

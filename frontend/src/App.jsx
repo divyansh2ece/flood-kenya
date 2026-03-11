@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Map            from './components/Map'
 import IncidentFeed   from './components/IncidentFeed'
@@ -98,6 +98,8 @@ export default function App() {
   const [rightWidth, rightDragHandle] = useDragResize(256, 'left')   // ← pass 'left'
 
   const { reports, stats, loading, resolveReport, verifyReport } = useRealtimeReports(hours)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  useEffect(() => { if (!loading) setLastUpdated(new Date()) }, [reports, loading])
 
   const handleMapClick = useCallback(async (lat, lng) => {
     setClickedCoords({ lat, lng })
@@ -126,6 +128,11 @@ export default function App() {
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-breathe" />
             <span className="text-red-600 dark:text-red-400 text-xs font-semibold tracking-wide uppercase">Live</span>
           </div>
+          {lastUpdated && (
+            <span className="hidden sm:block text-[10px] font-mono text-slate-400 dark:text-slate-500">
+              {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
         </div>
 
         <div className="flex-1 flex justify-center">
@@ -154,7 +161,7 @@ export default function App() {
           style={{ width: leftOpen ? leftWidth : 0, transition: 'width 0.18s ease' }}
         >
           {leftOpen && (
-            <div className="flex flex-col h-full" style={{ width: leftWidth, minWidth: leftWidth }}>
+            <div className="flex flex-col h-full overflow-hidden" style={{ width: leftWidth, minWidth: leftWidth }}>
               <IncidentFeed
                 reports={reports}
                 hours={hours}
@@ -217,7 +224,7 @@ export default function App() {
             {reports.filter(r => !r.resolved).slice(0, 5).map(r => (
               <div key={r.id} className={`px-3 py-2 border-b border-slate-100 dark:border-navy-700/50 flex items-center gap-2 border-l-2 ${r.severity >= 4 ? 'border-l-red-500' : r.severity === 3 ? 'border-l-orange-400' : 'border-l-yellow-400'}`}>
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.severity >= 4 ? 'bg-red-500 animate-pulse' : r.severity === 3 ? 'bg-orange-400' : 'bg-yellow-400'}`} />
-                <span className="text-slate-700 dark:text-slate-300 text-xs truncate">{r.location || r.county || 'Kenya'}</span>
+                <span className="text-slate-700 dark:text-slate-300 text-xs truncate">{r.location || r.county || 'Unknown location'}</span>
                 {r.needs_rescue && <span className="text-red-500 text-xs font-bold shrink-0 animate-breathe">SOS</span>}
               </div>
             ))}
