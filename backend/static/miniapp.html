@@ -418,7 +418,8 @@
     if (tg.colorScheme === 'dark') document.body.classList.add('dark');
   }
 
-  const API = 'http://localhost:8000'; // Replace with Render URL after deploy
+  // Relative URL — works automatically on both localhost and Render production
+  const API = window.location.origin;
 
   let selectedSev = 2;
   let reportLat = null, reportLng = null;

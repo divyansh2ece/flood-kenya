@@ -640,7 +640,16 @@ async def handle_wl_callback_in_flow(update: Update, context: ContextTypes.DEFAU
 # ── Bot entry point (run in own thread) ────────────────────────
 
 def _run_bot_sync(token: str):
-    """Runs in a daemon thread with its own event loop — no conflict with uvicorn."""
+    """
+    Runs in a daemon thread with its own standard asyncio event loop.
+    MUST use asyncio.new_event_loop() explicitly — uvicorn installs uvloop as the
+    global event loop policy, which bleeds into new threads and causes
+    'this event loop is already running' errors inside PTB's run_polling().
+    Forcing a plain asyncio loop in this thread sidesteps that entirely.
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     async def _main():
         application = Application.builder().token(token).build()
 
@@ -669,10 +678,10 @@ def _run_bot_sync(token: str):
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
         log.info("Bot starting polling...")
-        # stop_signals=None required — uvloop can't add_signal_handler from non-main thread
         await application.run_polling(drop_pending_updates=True, stop_signals=None)
 
-    asyncio.run(_main())
+    loop.run_until_complete(_main())
+    loop.close()
 
 
 def start_bot_thread(token: str) -> threading.Thread:
