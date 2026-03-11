@@ -14,9 +14,35 @@ ALERT_SEVERITY_THRESHOLD = 4   # auto-alert if severity >= this
 CLUSTER_RADIUS_MINUTES = 30    # duplicate window
 
 
+@router.get("/healthdb")
+async def health_db():
+    """Test Supabase connection — visit /reports/healthdb to debug"""
+    import os
+    url  = os.getenv("SUPABASE_URL", "NOT SET")
+    key  = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "NOT SET")
+    info = {
+        "supabase_url":  url,
+        "key_set":       key != "NOT SET",
+        "key_prefix":    key[:12] + "..." if key != "NOT SET" else "NOT SET",
+    }
+    try:
+        db = get_supabase()
+        result = db.table("flood_reports").select("id").limit(3).execute()
+        info["db_status"]    = "connected"
+        info["sample_rows"]  = len(result.data or [])
+        info["sample_ids"]   = [r["id"] for r in (result.data or [])]
+    except Exception as e:
+        info["db_status"] = "FAILED"
+        info["db_error"]  = str(e)
+    return info
+
+
 @router.post("/", response_model=dict)
 async def create_report(body: ReportCreate):
-    db = get_supabase()
+    try:
+        db = get_supabase()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB init failed: {e}")
 
     # If raw_message provided but no parsed fields, auto-parse it
     if body.raw_message and not body.location:
@@ -62,10 +88,13 @@ async def create_report(body: ReportCreate):
         "reporter_contact": body.reporter_contact,
     }
 
-    result = db.table("flood_reports").insert(row).execute()
+    try:
+        result = db.table("flood_reports").insert(row).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB insert failed: {e}")
 
     if not result.data:
-        raise HTTPException(status_code=500, detail="Failed to save report")
+        raise HTTPException(status_code=500, detail="DB insert returned no data — check RLS policies")
 
     saved = result.data[0]
     report_id = saved["id"]
